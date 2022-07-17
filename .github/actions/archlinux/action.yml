@@ -1,0 +1,15 @@
+name: Run Command In Archlinux Docker Container
+description: Run Command In Archlinux Docker Container
+inputs:
+  directory:
+    description: Directory to run from
+    required: true
+  scripts:
+    description: Script to run
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{inputs.directory}}
+    - "${{inputs.scripts}}"
