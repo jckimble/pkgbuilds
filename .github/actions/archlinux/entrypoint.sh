@@ -17,7 +17,5 @@ echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
 og=$(stat -c '%u:%g' .)
 chown -R build: .
 cd $1
-listDir .
 sudo -u build $2
-listDir ..
 chown -R "$og" .
