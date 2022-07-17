@@ -28,6 +28,7 @@ jobs:
       with:
         submodules: recursive
     - name: Get current version ${{ matrix.package }}
+      continue-on-error: true
       uses: robinraju/release-downloader@v1.4
       with:
         latest: true
