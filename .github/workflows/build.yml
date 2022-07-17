@@ -56,11 +56,10 @@ jobs:
     - name: "Commit and Push Packages"
       run: |
         cd docs
-        ls -lAh
         rm -f *.old
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git config --local advice.addIgnoredFile false
-        git add . pkg/*
+        git add -f . pkg/*
         git commit -m "Add Packages"
         git push -u origin master
