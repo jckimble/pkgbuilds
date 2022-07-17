@@ -10,7 +10,7 @@ jobs:
       image: nubs/arch-build
       options: --privileged
       volumes:
-        - .:/package
+        - ./:/package
         - /sys/fs/cgroup:/sys/fs/cgroup
 
     strategy:
@@ -25,7 +25,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: packages
-        path: public/pkg/${{ matrix.package }}*
+        path: docs/pkg/${{ matrix.package }}*
         retention-days: 1
   
   build-repo:
@@ -44,12 +44,12 @@ jobs:
       with:
         name: packages
     - name: "Create Repo"
-      working-directory: public
+      working-directory: docs
       run: repo-add -R -n -q jckimble.db.tar.xz pkg/*
     - name: "Commit and Push Packages"
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add public
+        git add docs
         git commit -m "Add Packages"
         git push -u origin master
