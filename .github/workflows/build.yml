@@ -17,10 +17,9 @@ jobs:
       working-directory: ${{ matrix.package }}
       run: makepkg -C -c --config ../makepkg.conf
     - uses: actions/upload-artifact@v3
-      working-directory: public/pkg
       with:
         name: packages
-        path: ${{ matrix.package }}*
+        path: public/pkg/${{ matrix.package }}*
         retention-days: 1
   
   build-repo:
