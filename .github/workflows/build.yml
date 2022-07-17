@@ -47,6 +47,7 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: packages
+        path: docs/pkg/
     - name: "Create Repo"
       uses: ./.github/actions/archlinux
       with:
