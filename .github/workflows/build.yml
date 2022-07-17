@@ -71,12 +71,20 @@ jobs:
       uses: ./.github/actions/archlinux
       with:
         directory: .
-        scripts: "repo-add -R -n -q jckimble.db.tar.xz pkg/*"
+        scripts: "repo-add -q jckimble.db.tar.xz pkg/*"
     - name: "Upload Packages"
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
         file: 'pkg/*'
+        file_glob: true
+        overwrite: true
+    - name: "Upload Database"
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: jckimble*
         file_glob: true
         overwrite: true

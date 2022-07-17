@@ -15,7 +15,6 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 
 ## TODO (Ideas)
 
-  - Look into dependabot submodule dependency updates with auto merge. Should keep packages up2date without scheduled polling
   - Add GPG Signing with github action to keep key updated
   - Set matrix to only run changed files or submodules
 
