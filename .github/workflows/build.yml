@@ -11,6 +11,8 @@ jobs:
       pwd: ${{ steps.set-pwd.outputs.pwd }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
     - id: set-pwd
       run: echo "::set-output name=pwd::$(pwd)"
     - id: set-matrix
