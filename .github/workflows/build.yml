@@ -5,7 +5,11 @@ on:
 
 jobs:
   build-packages:
-    runs-on: archlinux
+    container:
+      image: archlinux
+      options: --privileged
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup
 
     strategy:
       matrix:
@@ -23,7 +27,11 @@ jobs:
         retention-days: 1
   
   build-repo:
-    runs-on: archlinux
+    container:
+      image: archlinux
+      options: --privileged
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup
     needs: build-packages
 
     steps:
