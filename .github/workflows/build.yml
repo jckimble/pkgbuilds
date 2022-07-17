@@ -5,6 +5,7 @@ on:
 
 jobs:
   build-packages:
+    runs-on: "ubuntu-latest"
     container:
       image: archlinux
       options: --privileged
@@ -27,6 +28,7 @@ jobs:
         retention-days: 1
   
   build-repo:
+    runs-on: "ubuntu-latest"
     container:
       image: archlinux
       options: --privileged
