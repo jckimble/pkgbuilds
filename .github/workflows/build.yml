@@ -27,6 +27,15 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+    - name: Get current version ${{ matrix.package }}
+      uses: robinraju/release-downloader@v1.4
+      with:
+        latest: true
+        fileName: ${{ matrix.package }}*
+        tarBall: false
+        zipBall: false
+        out-file-path: "docs/pkg/"
+        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Build Package ${{ matrix.package }}
       uses: ./.github/actions/archlinux
       with:
@@ -53,13 +62,11 @@ jobs:
       with:
         directory: docs
         scripts: "repo-add -R -n -q jckimble.db.tar.xz pkg/*"
-    - name: "Commit and Push Packages"
-      run: |
-        cd docs
-        rm -f *.old
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git config --local advice.addIgnoredFile false
-        git add -f . pkg/*
-        git commit -m "Add Packages"
-        git push -u origin master
+    - name: "Upload Packages"
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: 'docs/*'
+        file_glob: true
+        overwrite: true
