@@ -31,7 +31,7 @@ jobs:
       uses: ./.github/actions/archlinux
       with:
         directory: ${{ matrix.package }}
-        scripts: "makepkg -C -c --config ../makepkg.conf"
+        scripts: "makepkg -s -C -c --config ../makepkg.conf"
     - uses: actions/upload-artifact@v3
       with:
         name: packages
