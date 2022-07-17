@@ -1,7 +1,9 @@
 #!/bin/bash
 set -ex
 pacman-key --init
-pacman -Syu --noconfirm --ignore linux --ignore linux-firmwre --needed base-devel
+pacman -Syu --noconfirm --noprogresbar --ignore linux --ignore linux-firmwre --needed base-devel devtools dbus sudo
+
+dbus-uuidgen ==ensure=/etc/machine-id
 
 groupadd -f -r wheel
 
