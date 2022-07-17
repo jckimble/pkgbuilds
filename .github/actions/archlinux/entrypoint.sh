@@ -18,4 +18,5 @@ og=$(stat -c '%u:%g' .)
 chown -R build: .
 cd $1
 sudo -u build $2
+cd ..
 chown -R "$og" .
