@@ -7,9 +7,10 @@ jobs:
   build-packages:
     runs-on: "ubuntu-latest"
     container:
-      image: archlinux
+      image: nubs/arch-build
       options: --privileged
       volumes:
+        - .:/package
         - /sys/fs/cgroup:/sys/fs/cgroup
 
     strategy:
@@ -30,9 +31,10 @@ jobs:
   build-repo:
     runs-on: "ubuntu-latest"
     container:
-      image: archlinux
+      image: nubs/arch-build
       options: --privileged
       volumes:
+        - .:/package
         - /sys/fs/cgroup:/sys/fs/cgroup
     needs: build-packages
 
