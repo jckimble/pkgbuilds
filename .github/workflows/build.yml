@@ -13,7 +13,7 @@ jobs:
     - id: set-pwd
       run: echo "::set-output name=pwd::$(pwd)"
     - id: set-matrix
-      run: echo "::set-output name=matrix::[$(find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]')]"
+      run: echo "::set-output name=matrix::$(find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]')"
 
   build-packages:
     runs-on: "ubuntu-latest"
