@@ -29,7 +29,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/download-artifact@v3
-      working-directory: public/pkg
       with:
         name: packages
     - name: "Create Repo"
