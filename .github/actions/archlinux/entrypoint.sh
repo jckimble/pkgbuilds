@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 pacman-key --init
-pacman -Syu --noconfirm --noprogresbar --ignore linux --ignore linux-firmwre --needed base-devel devtools dbus sudo
+pacman -Syu --noconfirm --noprogressbar --ignore linux --ignore linux-firmwre --needed base-devel devtools dbus sudo
 
 dbus-uuidgen ==ensure=/etc/machine-id
 
