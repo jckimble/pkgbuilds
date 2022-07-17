@@ -60,8 +60,7 @@ jobs:
         rm -f *.old
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add .
-        git add pkg/*
-        git status
+        git config --local advice.addIgnoredFile false
+        git add . pkg/*
         git commit -m "Add Packages"
         git push -u origin master
