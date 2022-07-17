@@ -10,7 +10,7 @@ jobs:
       image: nubs/arch-build
       options: --privileged
       volumes:
-        - ./:/package
+        - $(pwd):/package
         - /sys/fs/cgroup:/sys/fs/cgroup
 
     strategy:
@@ -34,7 +34,7 @@ jobs:
       image: nubs/arch-build
       options: --privileged
       volumes:
-        - ./:/package
+        - $(pwd):/package
         - /sys/fs/cgroup:/sys/fs/cgroup
     needs: build-packages
 
