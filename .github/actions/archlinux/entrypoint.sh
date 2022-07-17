@@ -1,4 +1,8 @@
 #!/bin/bash
+listDir(){
+    echo $1
+    ls -lAh $1
+}
 set -ex
 pacman-key --init
 pacman -Syu --noconfirm --noprogressbar --ignore linux --ignore linux-firmwre --needed base-devel devtools dbus sudo
@@ -13,6 +17,7 @@ echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
 og=$(stat -c '%u:%g' .)
 chown -R build: .
 cd $1
+listDir .
 sudo -u build $2
-ls -lAh ../docs/pkg
+listDir ..
 chown -R "$og" .
