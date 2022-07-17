@@ -1,0 +1,45 @@
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-packages:
+    runs-on: archlinux
+
+    strategy:
+      matrix:
+        package: [google-chrome,holo,holo-build,kr-bin,ngrok,pacrepo-cli,visual-studio-code-bin,yay]
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Package ${{ matrix.package }}
+      working-directory: ${{ matrix.package }}
+      run: makepkg -C -c --config ../makepkg.conf
+    - uses: actions/upload-artifact@v3
+      working-directory: public/pkg
+      with:
+        name: packages
+        path: ${{ matrix.package }}*
+        retention-days: 1
+  
+  build-repo:
+    runs-on: archlinux
+    needs: build-packages
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v3
+      working-directory: public/pkg
+      with:
+        name: packages
+    - name: "Create Repo"
+      working-directory: public
+      run: repo-add -R -n -q jckimble.db.tar.xz pkg/*
+    - name: "Commit and Push Packages"
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add public
+        git commit -m "Add Packages"
+        git push -u origin master
