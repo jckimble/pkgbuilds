@@ -1,6 +1,6 @@
 # Maintainer: James C Kimble <me@jckimble.com>
 pkgname=pacrepo-cli
-pkgver=1.0.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Quick Tool for managing user repos in pacman.conf"
 arch=('any')
@@ -17,7 +17,7 @@ makedepends=(
 )
 _name=${pkgname#python-}
 source=(https://files.pythonhosted.org/packages/source/${_name::1}/$_name/$_name-$pkgver.tar.gz)
-sha256sums=('8b4160948784694abe2a544b7a87293e24766f27c9316bee26acaca462f213c0')
+sha256sums=(SKIP)
 
 build() {
     cd "$_name-$pkgver"

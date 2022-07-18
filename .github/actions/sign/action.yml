@@ -30,5 +30,5 @@ runs:
       run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
       shell: bash
     - if: ${{ steps.set-sign.outputs.sign == 'true' }}
-      run: gpg --detach-sign --use-agent --no-armor ${{inputs.file}}
+      run: find $(dirname "${{inputs.file}}") -iname $(basename "${{inputs.file}}") -exec gpg --no-tty --detach-sign --use-agent --no-armor {} \;
       shell: bash

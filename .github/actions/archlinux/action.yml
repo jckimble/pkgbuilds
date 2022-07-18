@@ -9,10 +9,6 @@ inputs:
     description: Packager Name and Email
     required: false
     default: 'GitHub Action <github-action@users.noreply.github.com>'
-  pkgdir:
-    description: makepkg out directory
-    required: false
-    default: 'pkg'
   scripts:
     description: Script to run
     required: true
@@ -20,7 +16,6 @@ runs:
   using: docker
   image: Dockerfile
   env:
-    PKGDEST: ${{inputs.pkgdir}}
     PACKAGER: ${{inputs.packager}}
   args:
     - ${{inputs.directory}}

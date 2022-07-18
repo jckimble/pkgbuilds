@@ -10,8 +10,10 @@ install="$pkgname.install"
 source=('jck.gpg')
 sha256sums=(SKIP)
 
+pkgver() {
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
 package() {
-    cd "$srcdir"
-    install -Dm755 "$pkgdir/usr/share/${pkgname}"
-    install -Dm644 jck.gpg "$pkgdir/usr/share/$pkgname/jck.gpg"
+  echo "Installing"
 }

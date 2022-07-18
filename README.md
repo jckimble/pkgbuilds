@@ -15,7 +15,7 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 
 ## TODO (Ideas)
 
-  - Add GPG Signing with github action to keep key updated
+  - Add github action to keep gpg key updated
   - Set matrix to only run changed files or submodules
 
 ## Customizing
@@ -23,6 +23,5 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 To build AUR packages of your own selection, fork this repository.  The master branch contains most of the build actions.
 
   - Fork this GitHub repository.
-  - Create a release (name currently hardcoded as "repository") in which your package repository will be stored.
   - Add git submodule
   - Each time you push an update to the repository, the package will be built and uploaded, and the repository updated.
