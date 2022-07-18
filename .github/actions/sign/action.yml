@@ -26,6 +26,7 @@ runs:
             echo "::set-output name=sign::false"
           fi
         fi
+      shell: bash
     - if: ${{ steps.set-sign.outputs.sign }}
       run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
       shell: bash
