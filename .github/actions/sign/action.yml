@@ -22,7 +22,6 @@ runs:
           if [ -f "${{inputs.gpgkey}}" ]; then
             echo "::set-output name=sign::true"
           else
-            #TODO: Generate key
             echo "::set-output name=sign::false"
           fi
         fi

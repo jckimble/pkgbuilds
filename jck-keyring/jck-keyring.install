@@ -1,0 +1,16 @@
+post_install() {
+	post_upgrade
+
+	usr/bin/pacrepo-cli remove jckimble
+	usr/bin/pacrepo-cli add jckimble https://github.com/jckimble/pkgbuilds/releases/download/repository
+}
+
+post_upgrade() {
+	usr/bin/pacman-key -a usr/share/jck-keyring/jck.gpg
+	usr/bin/pacman-key --lsign-key CA0B8178C87E1A3E
+}
+
+post_remove() {
+	usr/bin/pacman-key -d CA0B8178C87E1A3E
+	usr/bin/pacrepo-cli remove jckimble
+}

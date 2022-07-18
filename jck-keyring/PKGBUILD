@@ -1,0 +1,17 @@
+# Contributor: James C Kimble <me@jckimble.com>
+pkgname=jck-keyring
+pkgver=0.1
+pkgrel=1
+pkgdesc="Personal PGP Keyring"
+arch=(any)
+url="https://github.com/jckimble/pkgbuilds"
+license=('ISC')
+install="$pkgname.install"
+source=('jck.gpg')
+sha256sums=(SKIP)
+
+package() {
+    cd "$srcdir"
+    install -Dm755 "$pkgdir/usr/share/${pkgname}"
+    install -Dm644 jck.gpg "$pkgdir/usr/share/$pkgname/jck.gpg"
+}
