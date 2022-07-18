@@ -13,8 +13,22 @@ inputs:
     required: true
 runs:
   using: composite
-    steps:
-      - run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
-        shell: bash
-      - run: gpg --detach-sign --use-agent --no-armor ${{inputs.file}}
-        shell: bash
+  steps:
+    - id: set-sign
+      run: |
+        if [ -z "${{inputs.secret}}" ]; then
+          echo "::set-output name=sign::false"
+        else
+          if [ -f "${{inputs.gpgkey}}" ]; then
+            echo "::set-output name=sign::true"
+          else
+            #TODO: Generate key
+            echo "::set-output name=sign::false"
+          fi
+        fi
+    - if: ${{ steps.set-sign.outputs.sign }}
+      run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
+      shell: bash
+    - if: ${{ steps.set-sign.outputs.sign }}
+      run: gpg --detach-sign --use-agent --no-armor ${{inputs.file}}
+      shell: bash

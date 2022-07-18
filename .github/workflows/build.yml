@@ -8,20 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      sign: ${{ steps.set-sign.outputs.sign }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - id: set-sign
-      env:
-        KEY: ${{ secrets.ENCRYPTION_KEY }}
-      run: |
-        if [ -z "$KEY" ]; then
-          echo "::set-output name=sign::false"
-        else
-          echo "::set-output name=sign::true"
-        fi
     - id: set-matrix
       run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]'`"
 
@@ -82,7 +72,6 @@ jobs:
         name: packages
         path: pkg/
     - name: "Sign Packages"
-      if: ${{ needs.variables.outputs.sign }}
       uses: ./.github/actions/sign
       with:
         secret: ${{ secrets.ENCRYPTION_KEY }}
@@ -96,7 +85,6 @@ jobs:
     - name: "Cleanup old files"
       run: rm -f *.old
     - name: "Sign Repo"
-      if: ${{ needs.variables.outputs.sign }}
       uses: ./.github/actions/sign
       with:
         secret: ${{ secrets.ENCRYPTION_KEY }}
