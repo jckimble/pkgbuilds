@@ -1,0 +1,20 @@
+name: GPG Sign Files
+description: GPG Sign Files
+inputs:
+  secret:
+    description: secret key to dencrypt gpg key
+    required: true
+  gpgkey:
+    description: gpg key
+    required: false
+    default: 'key.gpg.enc'
+  file:
+    description: files to sign
+    required: true
+runs:
+  using: composite
+    steps:
+      - run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
+        shell: bash
+      - run: gpg --detach-sign --use-agent --no-armor ${{inputs.file}}
+        shell: bash

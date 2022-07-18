@@ -8,10 +8,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      sign: ${{ steps.set-sign.outputs.sign }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - id: set-sign
+      env:
+        KEY: ${{ secrets.ENCRYPTION_KEY }}
+      run: |
+        if [ -z "$KEY" ]; then
+          echo "::set-output name=sign::false"
+        else
+          echo "::set-output name=sign::true"
+        fi
     - id: set-matrix
       run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]'`"
 
@@ -40,8 +50,10 @@ jobs:
     - name: Build Package ${{ matrix.package }}
       uses: ./.github/actions/archlinux
       with:
+        packager: "James C Kimble (Github Actions) <me@jckimble.com>"
+        pkgdir: "../pkg"
         directory: ${{ matrix.package }}
-        scripts: "makepkg -si -C -c --config ../makepkg.conf --noconfirm --noprogressbar"
+        scripts: "makepkg -si -C -c --noconfirm --noprogressbar"
     - uses: actions/upload-artifact@v3
       with:
         name: packages
@@ -50,7 +62,9 @@ jobs:
   
   build-repo:
     runs-on: "ubuntu-latest"
-    needs: build-packages
+    needs:
+      - build-packages
+      - variables
 
     steps:
     - uses: actions/checkout@v3
@@ -67,11 +81,27 @@ jobs:
       with:
         name: packages
         path: pkg/
+    - name: "Sign Packages"
+      if: ${{ needs.variables.outputs.sign }}
+      uses: ./.github/actions/sign
+      with:
+        secret: ${{ secrets.ENCRYPTION_KEY }}
+        gpgkey: "key.gpg.enc"
+        file: 'pkg/*'
     - name: "Create Repo"
       uses: ./.github/actions/archlinux
       with:
-        directory: .
+        packager: "James C Kimble (Github Actions) <me@jckimble.com>"
         scripts: "repo-add -q jckimble.db.tar.xz pkg/*"
+    - name: "Cleanup old files"
+      run: rm -f *.old
+    - name: "Sign Repo"
+      if: ${{ needs.variables.outputs.sign }}
+      uses: ./.github/actions/sign
+      with:
+        secret: ${{ secrets.ENCRYPTION_KEY }}
+        gpgkey: "key.gpg.enc"
+        file: 'jckimble.db.tar.xz'
     - name: "Upload Packages"
       uses: svenstaro/upload-release-action@v2
       with:
