@@ -7,6 +7,14 @@ jobs:
   variables:
     runs-on: ubuntu-latest
     outputs:
+      encGPG: ${{ steps.config.outputs.encGPG }}
+      pubGPG: ${{ steps.config.outputs.pubGPG }}
+      name: ${{ steps.config.outputs.name }}
+      email: ${{ steps.config.outputs.email }}
+      repoName: ${{ steps.config.outputs.repoName}}
+
+      packager: ${{ steps.packager.outputs.packager }}
+
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - uses: actions/checkout@v3
@@ -14,6 +22,27 @@ jobs:
         submodules: recursive
     - id: set-matrix
       run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]'`"
+    - id: config
+      run: |
+        getVal(){
+          if [ ! -f config.json ]; then
+            echo "::set-output name=${1}::${2}"
+            return
+          fi
+          val=`cat config.json | jq -r .${1}`
+          if [ "${val}" == "null" ]; then
+            echo "::set-output name=${1}::${2}"
+            return
+          fi
+          echo "::set-output name=${1}::${val}"
+        }
+        getVal encGPG key.gpg.enc
+        getVal pubGPG public.gpg
+        getVal name "GitHub Action"
+        getVal email github-action@users.noreply.github.com
+        getVal repoName aur
+    - id: packager
+      run: echo "::set-output name=packager::${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
 
   build-packages:
     runs-on: ubuntu-latest
@@ -33,12 +62,14 @@ jobs:
       with:
         package: ${{ matrix.package }}
         token: ${{ secrets.GITHUB_TOKEN }}
-        packager: "James C Kimble (Github Actions) <me@jckimble.com>"
+        packager: ${{ needs.variables.outputs.packager }}
         secret: ${{ secrets.ENCRYPTION_KEY }}
   
   build-repo:
     runs-on: "ubuntu-latest"
-    needs: build-packages
+    needs: 
+      - variables
+      - build-packages
 
     steps:
     - uses: actions/checkout@v3
@@ -47,7 +78,7 @@ jobs:
       uses: robinraju/release-downloader@v1.4
       with:
         latest: true
-        fileName: jckimble.db.tar.xz
+        fileName: ${{ needs.variables.outputs.repoName }}.db.tar.xz
         tarBall: false
         zipBall: false
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -58,7 +89,7 @@ jobs:
     - name: "Create Repo"
       uses: ./.github/actions/archlinux
       with:
-        packager: "James C Kimble (Github Actions) <me@jckimble.com>"
+        packager: ${{ needs.variables.outputs.packager }}
         scripts: "repo-add -q jckimble.db.tar.xz pkg/*.pkg.tar.zst"
     - name: "Cleanup old files"
       run: rm -f *.old
@@ -66,8 +97,8 @@ jobs:
       uses: ./.github/actions/sign
       with:
         secret: ${{ secrets.ENCRYPTION_KEY }}
-        gpgkey: "key.gpg.enc"
-        file: 'jckimble.db.tar.xz'
+        gpgkey: ${{ needs.variables.outputs.encGPG }}
+        file: ${{ needs.variables.outputs.repoName }}.db.tar.xz
     - name: "Upload Packages"
       uses: svenstaro/upload-release-action@v2
       with:
@@ -81,6 +112,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: jckimble*
+        file: ${{ needs.variables.outputs.repoName }}*
         file_glob: true
         overwrite: true

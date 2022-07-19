@@ -3,7 +3,7 @@ post_install() {
 }
 
 post_upgrade() {
-	usr/bin/pacman-key -r CA0B8178C87E1A3E
+	usr/bin/pacman-key -a usr/share/jck-keyring/jck.gpg
 	usr/bin/pacman-key --lsign-key CA0B8178C87E1A3E
 	if [ -f "usr/bin/pacrepo-cli" ]; then
 		usr/bin/pacrepo-cli remove jckimble

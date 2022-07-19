@@ -9,11 +9,14 @@ license=('ISC')
 install="$pkgname.install"
 source=('jck.gpg')
 sha256sums=(SKIP)
+depends=()
 
 pkgver() {
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 package() {
-  echo "Installing"
+  depends+=(pacrepo-cli)
+  install -dm 7555 "${pkgdir}/usr/share/${pkgname}"
+	install -Dm755 "jck.gpg" "${pkgdir}/usr/share/${pkgname}/jck.gpg"
 }

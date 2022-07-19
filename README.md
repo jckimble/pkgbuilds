@@ -15,13 +15,27 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 
 ## TODO (Ideas)
 
-  - Add github action to keep gpg key updated
   - Set matrix to only run changed files or submodules
+  - Use issue forms to auto add aur packages?
 
 ## Customizing
 
 To build AUR packages of your own selection, fork this repository.  The master branch contains most of the build actions.
 
   - Fork this GitHub repository.
+  - Change config.json
+  - Optional: add secret key "ENCRYPTION_KEY" for signing
+  - Optional: create custom keyring package (Feel free to use mine as a reference)
   - Add git submodule
   - Each time you push an update to the repository, the package will be built and uploaded, and the repository updated.
+
+## config.json default values (all values are optional)
+```json
+{
+    "encGPG": "key.gpg.enc",
+    "pubGPG": "public.gpg",
+    "name": "GitHub Action",
+    "email": "github-action@users.noreply.github.com",
+    "repoName": "aur"
+}
+```
