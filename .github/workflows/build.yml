@@ -20,8 +20,9 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+        fetch-depth: 5
     - id: set-matrix
-      run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \; | jq -R -s -c 'split(\"\n\")[:-1]'`"
+      run: echo "::set-output name=matrix::`( (git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq) && find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; ) | sort | uniq -d | jq -R -s -c 'split(\"\n\")[:-1]'`"
     - id: config
       run: |
         getVal(){

@@ -15,7 +15,6 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 
 ## TODO (Ideas)
 
-  - Set matrix to only run changed files or submodules
   - Use issue forms to auto add aur packages?
 
 ## Customizing

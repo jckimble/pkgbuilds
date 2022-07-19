@@ -19,6 +19,6 @@
 [submodule "ngrok"]
 	path = ngrok
 	url = https://aur.archlinux.org/ngrok.git
-[submodule "pacrepo-cli-git"]
-	path = pacrepo-cli-git
+[submodule "pacrepo-cli"]
+	path = pacrepo-cli
 	url = https://github.com/jckimble/pacrepo-cli.git
