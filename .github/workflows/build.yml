@@ -3,6 +3,8 @@ on:
     branches:
       - master
       - dependabot/submodules/*
+    paths-ignore:
+      - README.md
 
 jobs:
   variables:
@@ -24,8 +26,6 @@ jobs:
         fetch-depth: 5
     - name: Changed Files
       run: git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
-    - id: set-matrix
-      run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
     - id: config
       run: |
         getVal(){
@@ -45,6 +45,23 @@ jobs:
         getVal name "GitHub Action"
         getVal email github-action@users.noreply.github.com
         getVal repoName aur
+    - id: set-matrix
+      run: |
+        ALL=false
+        MODIFIED="$(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq)"
+        if [ "$MODIFIED" == "" ]; then
+          ALL=true
+        fi
+        for file in config.json .github ${{ steps.config.outputs.encGPG }}; do
+        if [ "$(echo $MODIFIED | grep $file)" == "$file" ]; then
+          ALL=true
+        fi
+        done
+        if [ $ALL ]; then
+          echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
+        else
+          echo "::set-output name=matrix::`( (git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq) && find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; ) | sort | uniq -d | jq -R -s -c 'split(\"\n\")[:-1]'`"
+        fi
     - id: packager
       run: echo "::set-output name=packager::${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
 
@@ -90,9 +107,18 @@ jobs:
         name: packages
         path: repo/
     - uses: svenstaro/upload-release-action@v2
+      continue-on-error: true
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: 'repo/*'
+        file: 'repo/*.pkg.*'
+        file_glob: true
+        overwrite: false
+    - uses: svenstaro/upload-release-action@v2
+      continue-on-error: true
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: 'repo/${{ needs.variables.outputs.repoName }}.*'
         file_glob: true
         overwrite: true

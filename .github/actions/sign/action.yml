@@ -4,6 +4,10 @@ inputs:
   secret:
     description: secret key to dencrypt gpg key
     required: true
+  dir:
+    description: Directory
+    required: false
+    default: '.'
   gpgkey:
     description: gpg key
     required: false
@@ -30,5 +34,9 @@ runs:
       run: openssl aes-256-cbc -d -a -pbkdf2 -in ${{inputs.gpgkey}} -pass pass:${{inputs.secret}} | gpg --import
       shell: bash
     - if: ${{ steps.set-sign.outputs.sign == 'true' }}
-      run: find $(dirname "${{inputs.file}}") -iname $(basename "${{inputs.file}}") -exec gpg --no-tty --detach-sign --use-agent --no-armor {} \;
+      run: find ${{inputs.dir}} -iname "${{inputs.file}}" -exec gpg --no-tty --detach-sign --use-agent --no-armor {} \;
+      shell: bash
+    - run: ls -lAh
+      shell: bash
+    - run: ls -lAh ${{inputs.dir}}
       shell: bash

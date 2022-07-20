@@ -29,8 +29,10 @@ runs:
         fileName: ${{ inputs.package }}*
         tarBall: false
         zipBall: false
+        out-file-path: ${{ inputs.package }}
         token: ${{ inputs.token }}
     - name: Build Package ${{ inputs.package }}
+      continue-on-error: true
       uses: ./.github/actions/archlinux
       with:
         packager: ${{ inputs.packager }}
@@ -41,9 +43,10 @@ runs:
       with:
         secret: ${{ inputs.secret }}
         gpgkey: ${{ inputs.gpgkey }}
-        file: '${{ inputs.package }}\*.pkg.tar.zst'
+        dir: ${{ inputs.package }}
+        file: '${{ inputs.package }}*.pkg.tar.zst'
     - uses: actions/upload-artifact@v3
       with:
         name: packages
-        path: ${{ inputs.package }}*.pkg.*
+        path: ${{ inputs.package }}/${{ inputs.package }}*.pkg.*
         retention-days: 1

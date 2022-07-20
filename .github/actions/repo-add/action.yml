@@ -27,7 +27,7 @@ runs:
       uses: robinraju/release-downloader@v1.4
       with:
         latest: true
-        fileName: ${{ inputs.name }}.db.tar.xz
+        fileName: ${{ inputs.name }}*
         tarBall: false
         zipBall: false
         token: ${{ inputs.token }}
@@ -42,16 +42,16 @@ runs:
         script: repo-add
         args: ${{ inputs.name }}
     - name: "Cleanup old files"
-      run: rm -f *.old
+      run: rm -f *.old *.old.sig
       shell: bash
     - name: "Sign Repo"
       uses: ./.github/actions/sign
       with:
         secret: ${{ inputs.secret }}
         gpgkey: ${{ inputs.gpgkey }}
-        file: ${{ inputs.name }}.db.tar.xz
+        file: '${{ inputs.name }}.db'
     - uses: actions/upload-artifact@v3
       with:
         name: packages
-        path: ${{ inputs.name }}.db*
+        path: ${{ inputs.name }}*
         retention-days: 1
