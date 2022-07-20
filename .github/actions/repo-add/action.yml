@@ -1,0 +1,55 @@
+name: repo-add for Archlinux
+description: repo-add for Archlinux
+inputs:
+  name:
+    description: Repo Name
+    required: false
+    default: 'aur'
+  token:
+    description: GitHub Token
+    required: true
+  packager:
+    description: Packager Name and Email
+    required: false
+    default: 'GitHub Action <github-action@users.noreply.github.com>'
+  gpgkey:
+    description: gpg key
+    required: false
+    default: 'key.gpg.enc'
+  secret:
+    description: secret key to dencrypt gpg key
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Get current version
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.4
+      with:
+        latest: true
+        fileName: ${{ inputs.name }}.db.tar.xz
+        tarBall: false
+        zipBall: false
+        token: ${{ inputs.token }}
+    - uses: actions/download-artifact@v3
+      with:
+        name: packages
+        path: pkg/
+    - name: "Create Repo"
+      uses: ./.github/actions/archlinux
+      with:
+        packager: ${{ inputs.packager }}
+        scripts: find pkg -iname \*.pkg.tar.zst -exec repo-add -R -p -q ${{ inputs.name }}.db.tar.xz {} \;
+    - name: "Cleanup old files"
+      run: rm -f *.old
+    - name: "Sign Repo"
+      uses: ./.github/actions/sign
+      with:
+        secret: ${{ inputs.secret }}
+        gpgkey: ${{ inputs.gpgkey }}
+        file: ${{ inputs.name }}.db.tar.xz
+    - uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: ${{ inputs.name }}.db*
+        retention-days: 1

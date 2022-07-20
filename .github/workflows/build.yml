@@ -74,45 +74,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Get current version
-      continue-on-error: true
-      uses: robinraju/release-downloader@v1.4
+    - name: "Update Repo"
+      uses: ./.github/actions/repo-add
       with:
-        latest: true
-        fileName: ${{ needs.variables.outputs.repoName }}.db.tar.xz
-        tarBall: false
-        zipBall: false
+        packager: ${{ needs.variables.outputs.packager }}
+        name: ${{ needs.variables.outputs.repoName }}
+        secret: ${{ secrets.ENCRYPTION_KEY }}
+        gpgkey: ${{ needs.variables.outputs.encGPG }}
         token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/download-artifact@v3
       with:
         name: packages
-        path: pkg/
-    - name: "Create Repo"
-      uses: ./.github/actions/archlinux
-      with:
-        packager: ${{ needs.variables.outputs.packager }}
-        scripts: "repo-add -q jckimble.db.tar.xz pkg/*.pkg.tar.zst"
-    - name: "Cleanup old files"
-      run: rm -f *.old
-    - name: "Sign Repo"
-      uses: ./.github/actions/sign
-      with:
-        secret: ${{ secrets.ENCRYPTION_KEY }}
-        gpgkey: ${{ needs.variables.outputs.encGPG }}
-        file: ${{ needs.variables.outputs.repoName }}.db.tar.xz
-    - name: "Upload Packages"
-      uses: svenstaro/upload-release-action@v2
+        path: repo/
+    - uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: 'pkg/*'
-        file_glob: true
-        overwrite: true
-    - name: "Upload Database"
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: repository
-        file: ${{ needs.variables.outputs.repoName }}*
+        file: 'repo/*'
         file_glob: true
         overwrite: true
