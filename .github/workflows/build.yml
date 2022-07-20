@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - dependabot/submodules/*
 
 jobs:
   variables:
@@ -20,6 +21,9 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+        fetch-depth: 5
+    - name: Changed Files
+      run: git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
     - id: set-matrix
       run: echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
     - id: config

@@ -35,7 +35,7 @@ runs:
       with:
         packager: ${{ inputs.packager }}
         directory: ${{ inputs.package }}
-        scripts: makepkg -sr -C -c --noconfirm --noprogressbar
+        script: makepkg
     - name: "Sign Package"
       uses: ./.github/actions/sign
       with:

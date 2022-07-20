@@ -9,9 +9,14 @@ inputs:
     description: Packager Name and Email
     required: false
     default: 'GitHub Action <github-action@users.noreply.github.com>'
-  scripts:
-    description: Script to run
-    required: true
+  script:
+    description: Script to Run
+    required: false
+    default: 'exec'
+  args:
+    description: Arguments
+    required: false
+    default: 'ls -lAh'
 runs:
   using: docker
   image: Dockerfile
@@ -19,4 +24,5 @@ runs:
     PACKAGER: ${{inputs.packager}}
   args:
     - ${{inputs.directory}}
-    - "${{inputs.scripts}}"
+    - ${{inputs.script}}
+    - "${{inputs.args}}"

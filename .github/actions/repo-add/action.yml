@@ -39,7 +39,8 @@ runs:
       uses: ./.github/actions/archlinux
       with:
         packager: ${{ inputs.packager }}
-        scripts: "find pkg -iname *.pkg.tar.zst -exec repo-add -R -p -q ${{ inputs.name }}.db.tar.xz {} \;"
+        script: repo-add
+        args: ${{ inputs.name }}
     - name: "Cleanup old files"
       run: rm -f *.old
       shell: bash
