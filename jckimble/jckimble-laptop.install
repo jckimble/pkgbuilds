@@ -1,0 +1,10 @@
+post_install(){
+	post_upgrade
+}
+
+post_upgrade(){
+	sed -i 's/#Storage=auto/Storage=atomic/' etc/systemd/journald.conf
+	systemctl enable NetworkManager
+	systemctl enable iptables
+	systemctl enable wol-disable
+}
