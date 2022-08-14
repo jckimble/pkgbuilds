@@ -1,4 +1,6 @@
 on:
+  release:
+    types: [deleted]
   push:
     branches:
       - master
