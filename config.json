@@ -1,5 +1,5 @@
 {
-    "pubGPG": "jckimble/public.gpg",
+    "pubGPG": "jckimble-keyring/public.gpg",
     "name": "James C Kimble (Github Actions)",
     "email": "me@jckimble.com",
     "repoName": "jckimble"

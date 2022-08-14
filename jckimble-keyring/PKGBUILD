@@ -1,0 +1,22 @@
+# Contributor: James C Kimble <me@jckimble.com>
+pkgname=jckimble-keyring
+pkgver=20220721060440
+pkgrel=1
+pkgdesc="Keyring"
+arch=(any)
+url="https://github.com/jckimble/pkgbuilds"
+license=('ISC')
+source=(public.gpg)
+sha256sums=(SKIP)
+depends=()
+
+pkgver() {
+  date +%Y%m%d%H%M%S
+}
+
+package() {
+  install=jckimble-keyring.install
+  depends=(pacrepo-cli)
+  install -dm 7555 "${pkgdir}/usr/share/jckimble-keyring"
+	install -Dm755 "public.gpg" "${pkgdir}/usr/share/jckimble-keyring/public.gpg"
+}
