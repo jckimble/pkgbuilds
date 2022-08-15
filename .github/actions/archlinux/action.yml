@@ -17,6 +17,9 @@ inputs:
     description: Arguments
     required: false
     default: 'ls -lAh'
+outputs:
+  removed:
+    description: 'Removed files from repo-add'
 runs:
   using: docker
   image: Dockerfile

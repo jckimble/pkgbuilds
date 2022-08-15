@@ -19,6 +19,10 @@ inputs:
   secret:
     description: secret key to dencrypt gpg key
     required: true
+outputs:
+  removed:
+    description: "Removed Packages"
+    value: ${{ steps.repo.outputs.removed }}
 runs:
   using: composite
   steps:
@@ -35,7 +39,9 @@ runs:
       with:
         name: packages
         path: pkg/
-    - name: "Create Repo"
+
+    - id: repo
+      name: "Create Repo"
       uses: ./.github/actions/archlinux
       with:
         packager: ${{ inputs.packager }}

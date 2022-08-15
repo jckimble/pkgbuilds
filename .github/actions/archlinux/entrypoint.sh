@@ -15,6 +15,8 @@ elif [ "$2" == "makepkg" ]; then
     sudo -u build --preserve-env=PACKAGER makepkg -sr -C -c --noconfirm --noprogressbar
     cd "$od"
 elif [ "$2" == "repo-add" ]; then
+    inotifywait -m -e delete_self *.pkg.tar.zst > removed.txt &
     find $1 -iname \*.pkg.tar.zst -exec sudo -u build --preserve-env=PACKAGER repo-add -R -p -q ${3}.db.tar.xz {} \;
+    echo "::set-output name=removed::`cat removed.txt | cut -f1 -d ' '`"
 fi
 chown -R "$og" .

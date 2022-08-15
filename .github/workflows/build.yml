@@ -98,7 +98,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: "Update Repo"
+    - id: update
+      name: "Update Repo"
       uses: ./.github/actions/repo-add
       with:
         packager: ${{ needs.variables.outputs.packager }}
@@ -106,6 +107,7 @@ jobs:
         secret: ${{ secrets.ENCRYPTION_KEY }}
         gpgkey: ${{ needs.variables.outputs.encGPG }}
         token: ${{ secrets.GITHUB_TOKEN }}
+    - run: "echo ${{ steps.update.outputs.removed }}"
     - uses: actions/download-artifact@v3
       with:
         name: packages
