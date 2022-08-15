@@ -27,7 +27,9 @@ jobs:
         submodules: recursive
         fetch-depth: 5
     - name: Changed Files
-      run: git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
+      run: |
+        git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
+        git diff --name-only HEAD..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
     - id: config
       run: |
         getVal(){
