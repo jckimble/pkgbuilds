@@ -1,10 +1,7 @@
 on:
-  release:
-    types: [deleted]
   push:
     branches:
       - master
-      - dependabot/submodules/*
     paths-ignore:
       - README.md
 
@@ -21,15 +18,12 @@ jobs:
       packager: ${{ steps.packager.outputs.packager }}
 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      rebuild: ${{ steps.set-matrix.outputs.rebuild }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 5
-    - name: Changed Files
-      run: |
-        git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
-        git diff --name-only HEAD..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq
     - id: config
       run: |
         getVal(){
@@ -62,8 +56,10 @@ jobs:
         fi
         done
         if [ $ALL ]; then
+          echo "::set-output name=rebuild::true"
           echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
         else
+          echo "::set-output name=rebuild::false"
           echo "::set-output name=matrix::`( (git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq) && find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; ) | sort | uniq -d | jq -R -s -c 'split(\"\n\")[:-1]'`"
         fi
     - id: packager
@@ -107,11 +103,17 @@ jobs:
         secret: ${{ secrets.ENCRYPTION_KEY }}
         gpgkey: ${{ needs.variables.outputs.encGPG }}
         token: ${{ secrets.GITHUB_TOKEN }}
-    - run: "echo ${{ steps.update.outputs.removed }}"
     - uses: actions/download-artifact@v3
       with:
         name: packages
         path: repo/
+    - if: ${{ needs.variables.outputs.rebuild == 'true' }}
+      uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      with:
+        delete_release: true
+        tag_name: repository
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: svenstaro/upload-release-action@v2
       continue-on-error: true
       with:

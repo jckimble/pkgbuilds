@@ -19,10 +19,6 @@ inputs:
   secret:
     description: secret key to dencrypt gpg key
     required: true
-outputs:
-  removed:
-    description: "Removed Packages"
-    value: ${{ steps.repo.outputs.removed }}
 runs:
   using: composite
   steps:
