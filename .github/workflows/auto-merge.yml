@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Changed Files
-        run: echo ${{ github.event }}
+        run: echo ${{ toJson(github.event) }}
       - name: Merge me!
         uses: ridedott/merge-me-action@v2
         with:
