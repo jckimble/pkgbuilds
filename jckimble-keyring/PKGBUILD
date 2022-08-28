@@ -1,6 +1,6 @@
 # Contributor: James C Kimble <me@jckimble.com>
 pkgname=jckimble-keyring
-pkgver=20220721060440
+pkgver=20220819162816
 pkgrel=1
 pkgdesc="Keyring"
 arch=(any)
@@ -11,7 +11,7 @@ sha256sums=(SKIP)
 depends=()
 
 pkgver() {
-  date +%Y%m%d%H%M%S
+  date -r ./public.gpg +%Y%m%d%H%M%S
 }
 
 package() {
