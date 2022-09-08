@@ -16,17 +16,6 @@ jobs:
     name: Merge me!
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v29.0.4
-      - name: List all changed files
-        run: |
-          echo ${{ steps.changed-files.outputs.modified_files }}
-      - name: Changed Files
-        run: echo ${{ toJson(github.event) }}
       - name: Merge me!
         uses: ridedott/merge-me-action@v2
         with:
