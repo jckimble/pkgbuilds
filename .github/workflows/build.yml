@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - master
-      - dependabot/submodules/*
     paths-ignore:
       - README.md
 
