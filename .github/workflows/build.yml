@@ -20,19 +20,12 @@ jobs:
 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       rebuild: ${{ steps.set-matrix.outputs.rebuild }}
+      removed: ${{ steps.set-matrix.outputs.removed }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@v29.0.4
-    - name: List all changed files
-      run: |
-        echo ${{ steps.changed-files.outputs.added_files }}
-        echo ${{ steps.changed-files.outputs.modified_files }}
-        echo ${{ steps.changed-files.outputs.deleted_files }}
     - id: config
       run: |
         getVal(){
@@ -52,70 +45,49 @@ jobs:
         getVal name "GitHub Action"
         getVal email github-action@users.noreply.github.com
         getVal repoName aur
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v29.0.4
     - id: set-matrix
       run: |
-        ALL=false
-        MODIFIED="$(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq)"
-        if [ "$MODIFIED" == "" ]; then
-          ALL=true
-        fi
-        for file in config.json .github ${{ steps.config.outputs.encGPG }}; do
-        if [ "$(echo $MODIFIED | grep $file)" == "$file" ]; then
-          ALL=true
-        fi
-        done
-        if [ $ALL ]; then
-          echo "::set-output name=rebuild::true"
-          echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
-        else
-          echo "::set-output name=rebuild::false"
-          echo "::set-output name=matrix::`( (git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq) && find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; ) | sort | uniq -d | jq -R -s -c 'split(\"\n\")[:-1]'`"
-        fi
+          REBUILD=false
+          build=()
+          for file in ${{ steps.changed-files.outputs.added_files }} ${{ steps.changed-files.outputs.modified_files }}; do
+            for f in config.json ${{ steps.config.outputs.encGPG }}; do
+              if [ "$file" == "$f" ]; then
+                REBUILD=true
+              fi
+            done
+            if [ -f "`dirname $file`/PKGBUILD" ]; then
+              if [[ ! "${build[*]}" =~ "`dirname $file`" ]]; then
+                build += `dirname $file`
+              fi
+            fi
+            echo "$file was changed"
+          done
+          removed=()
+          for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+            if [ -f "`dirname $file`/PKGBUILD" ]; then
+              if [[ ! "${removed[*]}" =~ "`dirname $file`" ]]; then
+                removed += `dirname $file`
+              fi
+            fi
+          done
+          echo "::set-output name=removed::`echo -n \"${removed[@]}\" | jq -R -s -c 'split(\" \")'`"
+          echo ":set-output name=rebuild::$REBUILD"
+          if [ $REBUILD ]; then
+            echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
+          else
+            echo "::set-output name=matrix::`echo -n \"${build[@]}\" | jq -R -s -c 'split(\" \")'`"
+          fi
     - id: packager
       run: echo "::set-output name=packager::${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
 
-  build-packages:
+  rebuild-repo:
     runs-on: ubuntu-latest
     needs: variables
 
-    strategy:
-      matrix:
-        package: ${{fromJson(needs.variables.outputs.matrix)}}
-    
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-    - name: Build ${{ matrix.package }}
-      uses: ./.github/actions/makepkg
-      continue-on-error: true
-      with:
-        package: ${{ matrix.package }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        packager: ${{ needs.variables.outputs.packager }}
-        secret: ${{ secrets.ENCRYPTION_KEY }}
-  
-  build-repo:
-    runs-on: "ubuntu-latest"
-    needs: 
-      - variables
-      - build-packages
-
-    steps:
-    - uses: actions/checkout@v3
-    - id: update
-      name: "Update Repo"
-      uses: ./.github/actions/repo-add
-      with:
-        packager: ${{ needs.variables.outputs.packager }}
-        name: ${{ needs.variables.outputs.repoName }}
-        secret: ${{ secrets.ENCRYPTION_KEY }}
-        gpgkey: ${{ needs.variables.outputs.encGPG }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/download-artifact@v3
-      with:
-        name: packages
-        path: repo/
     - if: ${{ needs.variables.outputs.rebuild == 'true' }}
       uses: dev-drprasad/delete-tag-and-release@v0.2.0
       with:
@@ -123,19 +95,105 @@ jobs:
         tag_name: repository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  remove-packages:
+    runs-on: ubuntu-latest
+    needs: variables
+
+    if: ${{ fromJson(needs.variables.outputs.removed).length >= 1 }}
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        package: ${{fromJson(needs.variables.outputs.removed)}}
+
+    steps:
+    - uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        assets: ${{ matrix.package }}*
+    - name: Get current version
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.4
+      with:
+        latest: true
+        fileName: ${{ needs.variables.outputs.repoName }}.*
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: "Remove Package"
+      uses: ./.github/actions/archlinux
+      with:
+        script: exec
+        args: repo-remove ${{ matrix.package }}
     - uses: svenstaro/upload-release-action@v2
       continue-on-error: true
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: 'repo/*.pkg.*'
+        file: '${{ needs.variables.outputs.repoName }}.*'
+        file_glob: true
+        overwrite: true
+
+  build-package:
+    runs-on: ubuntu-latest
+    needs: variables
+
+    if: ${{ fromJson(needs.variables.outputs.matrix).length >= 1 }}
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        package: ${{fromJson(needs.variables.outputs.matrix)}}
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: Get current repo
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.4
+      with:
+        latest: true
+        fileName: ${{ needs.variables.outputs.repoName }}*
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - run: rm *.sig
+    - name: Build ${{ matrix.package }}
+      uses: ./.github/actions/makepkg
+      with:
+        package: ${{ matrix.package }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        packager: ${{ needs.variables.outputs.packager }}
+        secret: ${{ secrets.ENCRYPTION_KEY }}
+    - name: "Update Repo"
+      uses: ./.github/actions/archlinux
+      with:
+        packager: ${{ needs.variables.outputs.packager }}
+        script: repo-add
+        args: ${{ matrix.package }}*.pkg.*
+    - name: "Cleanup old files"
+      run: rm -f *.old *.old.sig
+    - name: "Sign Repo"
+      uses: ./.github/actions/sign
+      with:
+        secret: ${{ secrets.ENCRYPTION_KEY }}
+        gpgkey: ${{ needs.variables.outputs.encGPG }}
+        file: '${{ needs.variables.outputs.repoName }}.db'
+
+    - uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: '${{ matrix.package }}*.pkg.*'
         file_glob: true
         overwrite: false
     - uses: svenstaro/upload-release-action@v2
-      continue-on-error: true
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: 'repo/${{ needs.variables.outputs.repoName }}.*'
+        file: '${{ needs.variables.outputs.repoName }}.*'
         file_glob: true
         overwrite: true
