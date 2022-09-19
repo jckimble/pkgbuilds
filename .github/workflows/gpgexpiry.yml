@@ -89,7 +89,7 @@ jobs:
       - name: Update Expiry
         if: ${{ steps.vars.outputs.run != 'false' && steps.check.outputs.update == 'true' }}
         run: |
-          gpg --batch --command-fd 0 --edit-key CA0B8178C87E1A3E <<-END
+          gpg --batch --command-fd 0 --edit-key ${{ steps.check.outputs.keyId }} <<-END
           expire
           3m
           save
