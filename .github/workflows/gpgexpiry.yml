@@ -98,7 +98,7 @@ jobs:
         if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
         run: |
           gpg --armor --export-secret-key ${{ steps.check.outputs.keyId }} | openssl aes-256-cbc -a -salt -pbkdf2 -out ${{ needs.variables.outputs.encGPG }} -pass pass:${{ secrets.ENCRYPTION_KEY }}
-          gpg --output ${{ needs.variables.outputs.pubGPG }} --armor --export ${{ steps.check.outputs.keyId }}
+          gpg --batch --output ${{ needs.variables.outputs.pubGPG }} --armor --export ${{ steps.check.outputs.keyId }}
       - name: Push Changes
         if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
         run: |
