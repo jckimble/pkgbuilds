@@ -97,6 +97,7 @@ jobs:
       - name: Export Keys
         if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
         run: |
+          rm ${{ needs.variables.outputs.encGPG }}
           gpg --armor --export-secret-key ${{ steps.check.outputs.keyId }} | openssl aes-256-cbc -a -salt -pbkdf2 -out ${{ needs.variables.outputs.encGPG }} -pass pass:${{ secrets.ENCRYPTION_KEY }}
           gpg --batch --output ${{ needs.variables.outputs.pubGPG }} --armor --export ${{ steps.check.outputs.keyId }}
       - name: Push Changes
