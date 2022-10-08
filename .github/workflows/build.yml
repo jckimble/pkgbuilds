@@ -1,4 +1,6 @@
 on:
+  schedule:
+    - cron: '0 2 * * *' #Daily at 2am
   push:
     branches:
       - master
@@ -18,20 +20,11 @@ jobs:
       packager: ${{ steps.packager.outputs.packager }}
 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      rebuild: ${{ steps.set-matrix.outputs.rebuild }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@v31.0.2
-    - name: List all changed files
-      run: |
-        echo ${{ steps.changed-files.outputs.added_files }}
-        echo ${{ steps.changed-files.outputs.modified_files }}
-        echo ${{ steps.changed-files.outputs.deleted_files }}
     - id: config
       run: |
         getVal(){
@@ -53,23 +46,7 @@ jobs:
         getVal repoName aur
     - id: set-matrix
       run: |
-        ALL=false
-        MODIFIED="$(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq)"
-        if [ "$MODIFIED" == "" ]; then
-          ALL=true
-        fi
-        for file in config.json .github ${{ steps.config.outputs.encGPG }}; do
-        if [ "$(echo $MODIFIED | grep $file)" == "$file" ]; then
-          ALL=true
-        fi
-        done
-        if [ $ALL ]; then
-          echo "::set-output name=rebuild::true"
           echo "::set-output name=matrix::`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
-        else
-          echo "::set-output name=rebuild::false"
-          echo "::set-output name=matrix::`( (git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | awk -F'/' '{ print $1 }' | uniq) && find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; ) | sort | uniq -d | jq -R -s -c 'split(\"\n\")[:-1]'`"
-        fi
     - id: packager
       run: echo "::set-output name=packager::${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
 
@@ -115,13 +92,6 @@ jobs:
       with:
         name: packages
         path: repo/
-    - if: ${{ needs.variables.outputs.rebuild == 'true' }}
-      uses: dev-drprasad/delete-tag-and-release@v0.2.0
-      with:
-        delete_release: true
-        tag_name: repository
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: svenstaro/upload-release-action@v2
       continue-on-error: true
       with:
