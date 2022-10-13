@@ -11,7 +11,7 @@ sha256sums=(SKIP)
 depends=()
 
 pkgver() {
-  date -r ./public.gpg +%Y%m%d%H%M%S
+  date --date "`git log -1 --pretty=\"format:%ci" public.gpg`" +%Y%m%d%H%M%S
 }
 
 package() {
