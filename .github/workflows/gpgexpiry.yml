@@ -2,7 +2,7 @@ name: "Check gpg expiry"
 
 on:
   schedule:
-    - cron: '0 1 * * *' #Daily at 1am
+    - cron: '0 1 * * 0' #Sunday at 1am
 
 jobs:
   variables:
@@ -108,3 +108,11 @@ jobs:
           git add ${{ needs.variables.outputs.encGPG }} ${{ needs.variables.outputs.pubGPG }}
           git commit -m "Update GPG Key"
           git push -u origin master
+      - name: Rebuild Repo
+        if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true # default: false
+          tag_name: repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,19 @@
 on:
-  schedule:
-    - cron: '0 2 * * *' #Daily at 2am
+  release:
+    types:
+      - deleted
+  repository_dispatch:
+    types:
+      - build
   push:
     branches:
       - master
     paths-ignore:
       - README.md
+
+concurrency:
+  group: "release"
+  cancel-in-progress: true
 
 jobs:
   variables:
