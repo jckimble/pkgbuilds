@@ -110,7 +110,7 @@ jobs:
           git push -u origin master
       - name: Rebuild Repo
         if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
-        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true # default: false
           tag_name: repository
