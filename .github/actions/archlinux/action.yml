@@ -1,31 +1,16 @@
 name: Run Command In Archlinux Docker Container
 description: Run Command In Archlinux Docker Container
 inputs:
-  directory:
+  dir:
     description: Directory to run from
     required: false
     default: '.'
-  packager:
-    description: Packager Name and Email
-    required: false
-    default: 'GitHub Action <github-action@users.noreply.github.com>'
-  script:
-    description: Script to Run
-    required: false
-    default: 'exec'
-  args:
-    description: Arguments
-    required: false
-    default: 'ls -lAh'
-outputs:
-  removed:
-    description: 'Removed files from repo-add'
+  run:
+    description: Script to run
+    required: true
 runs:
   using: docker
   image: Dockerfile
-  env:
-    PACKAGER: ${{inputs.packager}}
   args:
-    - ${{inputs.directory}}
-    - ${{inputs.script}}
-    - "${{inputs.args}}"
+    - ${{ inputs.dir }}
+    - ${{ inputs.run }}
