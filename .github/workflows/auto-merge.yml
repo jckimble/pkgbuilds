@@ -30,4 +30,4 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: build.yml
-          inputs: "{ \"package\": \"${ steps.dependabot-metadata.outputs.dependency-names }\" }"
+          inputs: "{ \"package\": \"${{ steps.dependabot-metadata.outputs.dependency-names }}\" }"
