@@ -57,7 +57,7 @@ jobs:
             set_output ${1} ${2}
             return
           fi
-          set_output ${1} ${2}
+          set_output ${1} $val
         }
         getVal encGPG key.gpg.enc
         getVal pubGPG public.gpg
