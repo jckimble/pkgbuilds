@@ -23,7 +23,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Package
-        uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@v121
         with:
           workflow: build.yml
           inputs: "{ \"package\": \"${{ steps.dependabot-metadata.outputs.dependency-names }}\" }"
