@@ -2,16 +2,15 @@ on:
 #  release:
 #    types:
 #      - deleted
-  workflow_dispatch:
-    inputs:
-      package:
-        description: "Package to Build"
-        type: string
   push:
     branches:
       - master
+      - dependabot/submodules/*
     paths-ignore:
       - README.md
+
+permissions:
+  packages: write
 
 concurrency:
   group: "release"
