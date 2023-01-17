@@ -8,6 +8,8 @@ on:
       - synchronize
 
 permissions:
+  actions: write
+  packages: write
   contents: write
   pull-requests: write
 
