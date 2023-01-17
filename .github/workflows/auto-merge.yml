@@ -8,8 +8,6 @@ on:
       - synchronize
 
 permissions:
-  actions: write
-  packages: write
   contents: write
   pull-requests: write
 
@@ -19,13 +17,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: fastify/github-action-merge-dependabot@v3
-      - name: Fetch Dependabot metadata
-        id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build Package
-        uses: benc-uk/workflow-dispatch@v121
-        with:
-          workflow: build.yml
-          inputs: "{ \"package\": \"${{ steps.dependabot-metadata.outputs.dependency-names }}\" }"
