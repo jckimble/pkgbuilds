@@ -8,7 +8,8 @@ on:
       - dependabot/submodules/*
     paths-ignore:
       - README.md
-
+#TODO: should beable to upload to release from dependabot branches
+#TODO: move to multiple workflows (rebuild,key update,dependabot)
 permissions:
   packages: write
   contents: write
