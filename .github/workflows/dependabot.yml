@@ -1,0 +1,178 @@
+on:
+  pull_request:
+
+permissions:
+  packages: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "release"
+
+jobs:
+  variables:
+    runs-on: ubuntu-latest
+    outputs:
+      encGPG: ${{ steps.config.outputs.encGPG }}
+      pubGPG: ${{ steps.config.outputs.pubGPG }}
+      name: ${{ steps.config.outputs.name }}
+      email: ${{ steps.config.outputs.email }}
+      repoName: ${{ steps.config.outputs.repoName}}
+
+      packager: ${{ steps.packager.outputs.packager }}
+
+      package: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+    steps:
+    - run: echo "Not dependabot[bot]" && exit 1
+      if: ${{ github.actor != 'dependabot[bot]' }}
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        ref: master
+    - id: config
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        getVal(){
+          if [ ! -f config.json ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          val=`cat config.json | jq -r .${1}`
+          if [ "${val}" == "null" ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          set_output ${1} $val
+        }
+        getVal encGPG key.gpg.enc
+        getVal pubGPG public.gpg
+        getVal name "GitHub Action"
+        getVal email github-action@users.noreply.github.com
+        getVal repoName aur
+    - id: packager
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        set_output packager "${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
+    - name: Fetch Dependabot metadata
+      id: dependabot-metadata
+      uses: dependabot/fetch-metadata@v1
+    
+  build-package:
+    runs-on: ubuntu-latest
+    needs: 
+      - variables
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: master
+    - name: Get current version ${{ needs.variables.outputs.package }}
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: ${{ needs.variables.outputs.package }}*
+        tarBall: false
+        zipBall: false
+        out-file-path: ${{ needs.variables.outputs.package }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build ${{ needs.variables.outputs.package }}
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+        SECRET: ${{ secrets.ENCRYPTION_KEY }}
+        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+      with:
+        dir: ${{ needs.variables.outputs.package }}
+        run: makepkg -sr --sign -C -c --noconfirm --noprogressbar
+    - name: Get current repo
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: ${{ needs.variables.outputs.repoName }}.db.tar.gz
+        out-file-path: ${{ needs.variables.outputs.package }}
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Remove old package from directory
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+      with:
+        dir: ${{ needs.variables.outputs.package }}
+        run: repo-add -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz ${{ needs.variables.outputs.package }}*.pkg.tar.zst
+    - name: Delete old package ${{ needs.variables.outputs.package }}
+      continue-on-error: true
+      uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        assets: ${{ needs.variables.outputs.package }}*
+    - name: Upload new package ${{ needs.variables.outputs.package }}
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: ${{ needs.variables.outputs.package }}/*.pkg.*
+        file_glob: true
+        overwrite: false
+
+  build-repo:
+    runs-on: "ubuntu-latest"
+    needs: 
+      - variables
+      - build-package
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: master
+    - name: Get current packages
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: '*.pkg.*'
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Repo
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+        SECRET: ${{ secrets.ENCRYPTION_KEY }}
+        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+      with:
+        run: repo-add -s -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz *.pkg.tar.zst
+    - name: Upload new repo
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: ${{ needs.variables.outputs.repoName }}.db*
+        file_glob: true
+        overwrite: true
+
+  merge-dependabot-pr:
+    name: Merge Dependabot PR
+    runs-on: ubuntu-latest
+    needs:
+      - build-repo
+    steps:
+      - uses: fastify/github-action-merge-dependabot@v3

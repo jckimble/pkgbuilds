@@ -1,0 +1,180 @@
+on:
+  release:
+    types:
+      - deleted
+permissions:
+  packages: write
+  contents: write
+
+concurrency:
+  group: "release"
+
+jobs:
+  variables:
+    runs-on: ubuntu-latest
+    outputs:
+      encGPG: ${{ steps.config.outputs.encGPG }}
+      pubGPG: ${{ steps.config.outputs.pubGPG }}
+      name: ${{ steps.config.outputs.name }}
+      email: ${{ steps.config.outputs.email }}
+      repoName: ${{ steps.config.outputs.repoName}}
+
+      packager: ${{ steps.packager.outputs.packager }}
+
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        ref: master
+    - id: config
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        getVal(){
+          if [ ! -f config.json ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          val=`cat config.json | jq -r .${1}`
+          if [ "${val}" == "null" ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          set_output ${1} $val
+        }
+        getVal encGPG key.gpg.enc
+        getVal pubGPG public.gpg
+        getVal name "GitHub Action"
+        getVal email github-action@users.noreply.github.com
+        getVal repoName aur
+    - id: set-matrix
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        set_output matrix "`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
+    - id: packager
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        set_output packager "${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
+
+  build-package:
+    runs-on: ubuntu-latest
+    needs: 
+      - variables
+
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.variables.outputs.matrix) }}
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: master
+    - name: Get current version ${{ matrix.package }}
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: ${{ matrix.package }}*
+        tarBall: false
+        zipBall: false
+        out-file-path: ${{ matrix.package }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build ${{ matrix.package }}
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+        SECRET: ${{ secrets.ENCRYPTION_KEY }}
+        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+      with:
+        dir: ${{ matrix.package }}
+        run: makepkg -sr --sign -C -c --noconfirm --noprogressbar
+    - name: Get current repo
+      continue-on-error: true
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: ${{ needs.variables.outputs.repoName }}.db.tar.gz
+        out-file-path: ${{ matrix.package }}
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Remove old package from directory
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+      with:
+        dir: ${{ matrix.package }}
+        run: repo-add -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz ${{ matrix.package }}*.pkg.tar.zst
+    - name: Delete old package ${{ matrix.package }}
+      continue-on-error: true
+      uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        assets: ${{ matrix.package }}*
+    - name: Upload new package ${{ matrix.package }}
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: ${{ matrix.package }}/*.pkg.*
+        file_glob: true
+        overwrite: false
+
+  build-repo:
+    runs-on: "ubuntu-latest"
+    needs: 
+      - variables
+      - build-package
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: master
+    - name: Get current packages
+      uses: robinraju/release-downloader@v1.7
+      with:
+        latest: true
+        fileName: '*.pkg.*'
+        tarBall: false
+        zipBall: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Repo
+      uses: ./.github/actions/archlinux
+      env:
+        PACKAGER: ${{ needs.variables.outputs.packager }}
+        SECRET: ${{ secrets.ENCRYPTION_KEY }}
+        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+      with:
+        run: repo-add -s -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz *.pkg.tar.zst
+    - name: Upload new repo
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: repository
+        file: ${{ needs.variables.outputs.repoName }}.db*
+        file_glob: true
+        overwrite: true
