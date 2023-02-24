@@ -23,7 +23,7 @@ To build AUR packages of your own selection, fork this repository.  The master b
 
   - Fork this GitHub repository.
   - Change config.json
-  - Optional: add secret key "ENCRYPTION_KEY" for signing
+  - Optional: add secret key (repository & dependabot) "ENCRYPTION_KEY" for signing
   - Optional: create custom keyring package (Feel free to use mine as a reference)
   - Add git submodule
   - Each time you push an update to the repository, the package will be built and uploaded, and the repository updated.
