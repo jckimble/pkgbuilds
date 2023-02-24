@@ -29,7 +29,7 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.base.sha }}
+        ref: ${{ github.event.pull_request.head.sha }}
     - id: config
       run: |
         set_output () {
