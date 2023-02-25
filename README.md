@@ -16,7 +16,6 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 ## TODO (Ideas)
 
   - Use issue forms to auto add aur packages?
-  - Add Push action (remove & add package)
 
 ## Customizing
 

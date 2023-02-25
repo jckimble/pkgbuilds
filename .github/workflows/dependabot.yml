@@ -55,7 +55,7 @@ jobs:
       env:
         PACKAGER: ${{ needs.variables.outputs.packager }}
         SECRET: ${{ secrets.ENCRYPTION_KEY }}
-        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+        GPGKEY: ${{ needs.variables.outputs.enc-gpg }}
       with:
         dir: ${{ needs.variables.outputs.package }}
         run: makepkg -sr --sign -C -c --noconfirm --noprogressbar
