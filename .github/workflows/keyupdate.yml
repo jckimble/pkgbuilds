@@ -95,13 +95,21 @@ jobs:
       - uses: actions/checkout@v2
       - id: vars
         run: |
+          set_output () {
+            if [[ -z "${ACT}" ]]; then
+              echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+            else
+              echo "set-output name=${1}::${2}"
+              echo "::set-output name=${1}::${2}"
+            fi
+          }
           if [ -z "${{ secrets.ENCRYPTION_KEY }}" ]; then
-            echo "::set-output name=run::false"
+            set_output run false
           else
             if [ -f "${{ needs.variables.outputs.encGPG }}" ]; then
-              echo "::set-output name=run::true"
+              set_output run true
             else
-              echo "::set-output name=run::gen"
+              set_output run gen
             fi
           fi
       - name: Import Keys
@@ -127,15 +135,23 @@ jobs:
       - id: check
         if: ${{ steps.vars.outputs.run != 'false' }}
         run: |
-          echo "::set-output name=keyId::$(gpg --list-secret-keys --keyid-format=long ${{ needs.variables.outputs.email }} | grep 'sec' | awk 'match($0, /[0-9A-Z]{16}/) {print substr($0, RSTART, RLENGTH)}')"
+          set_output () {
+            if [[ -z "${ACT}" ]]; then
+              echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+            else
+              echo "set-output name=${1}::${2}"
+              echo "::set-output name=${1}::${2}"
+            fi
+          }
+          set_output keyId "$(gpg --list-secret-keys --keyid-format=long ${{ needs.variables.outputs.email }} | grep 'sec' | awk 'match($0, /[0-9A-Z]{16}/) {print substr($0, RSTART, RLENGTH)}')"
           expiry=`gpg --list-secret-keys --keyid-format=long ${{ needs.variables.outputs.email }} | grep 'sec' | awk 'match ($6, /[0-9-]{10}/){print substr($6, RSTART, RLENGTH)}'`
           echo "Key Expires on ${expiry}"
           dtSec=$(date --date "$expiry" +'%s')    # For "now", use $(date +'%s')
           taSec=$(date --date "30 days" +'%s')
           if [ $dtSec -lt $taSec ]; then
-            echo "::set-output name=update::true"
+            set_output update true
           else
-            echo "::set-output name=update::false"
+            set_output update false
           fi
       - name: Update Expiry
         if: ${{ steps.vars.outputs.run != 'false' && steps.check.outputs.update == 'true' }}
