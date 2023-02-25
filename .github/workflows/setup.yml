@@ -24,6 +24,7 @@ jobs:
       email: ${{ steps.config.outputs.email }}
 
       gpg-key: ${{ steps.get-key.outputs.key }}
+      has-token: ${{ steps.get-key.outputs.has_token }}
       generate: ${{ steps.get-key.outputs.generate }}
     steps:
     - uses: actions/checkout@v3
@@ -42,6 +43,11 @@ jobs:
             echo "::set-output name=${1}::${2}"
           fi
         }
+        if [ -z "${{ secrets.REPO_TOKEN }}"]; then
+          set_output has_token false
+        else
+          set_output has_token true
+        fi
         if [ -z "${{ secrets.ENCRYPTION_KEY }}" ]; then
           set_output key $(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
           set_output generate true
@@ -55,7 +61,7 @@ jobs:
         fi;
 
   set-secrets:
-    if: ${{ secrets.REPO_TOKEN != "" }}
+    if: ${{ needs.variables.outputs.has-token == 'true' }}
     needs: variables
     runs-on: ubuntu-latest
     strategy:
