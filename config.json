@@ -1,6 +1,6 @@
 {
-    "pub-gpg": "jckimble-keyring/public.gpg",
+    "pub_gpg": "jckimble-keyring/public.gpg",
     "name": "James C Kimble (Github Actions)",
     "email": "me@jckimble.com",
-    "repo-name": "jckimble"
+    "repo_name": "jckimble"
 }

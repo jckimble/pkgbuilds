@@ -3,10 +3,10 @@ description: Load base configuration
 outputs:
   enc-gpg:
     description: "Encrypted GPG Key"
-    value: ${{ steps.config.outputs.enc-gpg }}
+    value: ${{ steps.config.outputs.enc_gpg }}
   pub-gpg: 
     description: "Public GPG Key"
-    value: ${{ steps.config.outputs.pub-gpg }}
+    value: ${{ steps.config.outputs.pub_gpg }}
   name: 
     description: "Real Name"
     value: ${{ steps.config.outputs.name }}
@@ -15,7 +15,7 @@ outputs:
     value: ${{ steps.config.outputs.email }}
   repo-name: 
     description: "Repo Name"
-    value: ${{ steps.config.outputs.repo-name}}
+    value: ${{ steps.config.outputs.repo_name}}
   packager: 
     description: "Packager"
     value: ${{ steps.config.outputs.packager }}
@@ -46,11 +46,11 @@ runs:
           fi
           set_output ${1} $val
         }
-        getVal enc-gpg key.gpg.enc
-        getVal pub-gpg public.gpg
+        getVal enc_gpg key.gpg.enc
+        getVal pub_gpg public.gpg
         getVal name "GitHub Action"
         getVal email github-action@users.noreply.github.com
-        getVal repo-name aur
+        getVal repo_name aur
     - id: packager
       shell: bash
       run: |
