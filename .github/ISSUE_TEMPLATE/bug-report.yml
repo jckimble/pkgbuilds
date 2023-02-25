@@ -1,0 +1,36 @@
+name: Bug Report
+description: A report of something not working right or an error building not related to a package
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected behaviour you didn't see
+    validations:
+      required: true
+
+  - type: textarea
+    id: unexpected-behaviour
+    attributes:
+      label: Unexpected behaviour you saw
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce the problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional information. Eg. Links to workflow runs, log messages, etc.
+    validations:
+      required: false

@@ -15,7 +15,21 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 
 ## TODO (Ideas)
 
-  - Use issue forms to auto add aur packages?
+  - Use issue forms to auto add aur packages? (In Progress)
+  - - aur.archlinux/rpc/v5/info
+  - - - resultcount <1> = reject
+  - - - RepoOwner = auto add
+  - - - OutOfDate: null && Popularity > num = auto add?
+  - - - Name, Description, License, LastModified, OutOfDate = review
+  - - - https://aur.archlinux.org/{Name}.git
+  - - - test build failed = reject
+  - - api.github/repos
+  - - - message = reject
+  - - - RepoOwner = auto add
+  - - - stargazers_count > num = auto add?
+  - - - name, description, license, updated_at = review
+  - - - clone_url
+  - - - test build failed = reject
 
 ## Customizing
 

@@ -1,0 +1,31 @@
+name: Request New Package
+description: Request a New Package
+labels: [package]
+
+title: "Package Request"
+
+body:
+- type: input
+  id: package
+  attributes:
+    label: Package
+  validations:
+    required: true
+
+- type: dropdown
+  id: source
+  attributes:
+    label: Package Source
+    multiple: false
+    options:
+      - Archlinux AUR
+      - Github Repo
+  validations:
+    required: true
+
+- type: checkboxes
+  attributes:
+    label: I acknowledge that by requesting a package does not mean my package will be added to this repo. I can create my own by using this template repo.
+    options:
+      - label: Confirm
+        required: true

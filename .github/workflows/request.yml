@@ -1,0 +1,20 @@
+name: Package Request
+on:
+  issues:
+    types:
+      - opened
+      - edited
+    label: package
+
+concurrency:
+  group: "release"
+
+jobs:
+  check_package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: stefanbuck/github-issue-praser@v3
+        id: issue-parser
+        with:
+          template-path: .github/ISSUE_TEMPLATE/request-package.yml
+      - run: echo ${SOURCE} - ${PACKAGE}
