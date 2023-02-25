@@ -1,4 +1,9 @@
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/keyupdate.yml'
   schedule:
     - cron: '15 1 * * 1'
 
@@ -17,7 +22,7 @@ jobs:
       pubGPG: ${{ steps.config.outputs.pubGPG }}
       name: ${{ steps.config.outputs.name }}
       email: ${{ steps.config.outputs.email }}
-      repoName: ${{ steps.config.outputs.repoName}}
+      repoName: ${{ steps.config.outputs.repoName }}
 
       packager: ${{ steps.packager.outputs.packager }}
 
@@ -166,7 +171,6 @@ jobs:
   build-package:
     runs-on: ubuntu-latest
     if: ${{ needs.updateExpiry.outputs.rebuild }}
-    continue-on-error: true
     needs: 
       - variables
       - updateExpiry
@@ -180,16 +184,6 @@ jobs:
       with:
         submodules: recursive
         ref: master
-    - name: Get current version ${{ matrix.package }}
-      continue-on-error: true
-      uses: robinraju/release-downloader@v1.7
-      with:
-        latest: true
-        fileName: ${{ matrix.package }}*
-        tarBall: false
-        zipBall: false
-        out-file-path: ${{ matrix.package }}
-        token: ${{ secrets.GITHUB_TOKEN }}
     - name: Build ${{ matrix.package }}
       uses: ./.github/actions/archlinux
       env:
@@ -199,30 +193,6 @@ jobs:
       with:
         dir: ${{ matrix.package }}
         run: makepkg -sr --sign -C -c --noconfirm --noprogressbar
-    - name: Get current repo
-      continue-on-error: true
-      uses: robinraju/release-downloader@v1.7
-      with:
-        latest: true
-        fileName: ${{ needs.variables.outputs.repoName }}.db.tar.gz
-        out-file-path: ${{ matrix.package }}
-        tarBall: false
-        zipBall: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-    - name: Remove old package from directory
-      uses: ./.github/actions/archlinux
-      env:
-        PACKAGER: ${{ needs.variables.outputs.packager }}
-      with:
-        dir: ${{ matrix.package }}
-        run: repo-add -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz ${{ matrix.package }}*.pkg.tar.zst
-    - name: Delete old package ${{ matrix.package }}
-      continue-on-error: true
-      uses: mknejp/delete-release-assets@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: repository
-        assets: ${{ matrix.package }}*
     - name: Upload new package ${{ matrix.package }}
       uses: svenstaro/upload-release-action@v2
       with:
