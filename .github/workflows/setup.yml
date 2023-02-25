@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'config.json'
+      - '.github/workflows/setup.yml'
 
 permissions:
   packages: write
@@ -53,7 +54,7 @@ jobs:
           fi
         fi;
 
-  secrets:
+  set-secrets:
     if: ${{ secrets.REPO_TOKEN != "" }}
     needs: variables
     runs-on: ubuntu-latest
