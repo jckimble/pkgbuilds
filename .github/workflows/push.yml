@@ -18,8 +18,8 @@ jobs:
       repo-name: ${{ steps.config.outputs.repo-name }}
       packager: ${{ steps.config.outputs.packager }}
 
-      deleted: ${{ steps.changed-files.outputs.deleted_files }}
-      added: ${{ steps.changed-files.outputs.added_files }}
+      deleted: ${{ steps.deleted-files.outputs.deleted_files }}
+      added: ${{ steps.added-files.outputs.added_files }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -27,9 +27,18 @@ jobs:
           submodules: recursive
       - id: config
         uses: ./.github/actions/load-config
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v35
+      - name: Get deleted files
+        id: deleted-files
+        uses: tj-actions/changed-files@v35.5.6
+        with:
+          files_ignore: .github/**
+          json: true
+          json_raw_format: true
+      - run: echo ${{ steps.deleted-files.outputs.deleted_files }}
+      - run: echo ${{ steps.deleted-files.outputs.other_deleted_files }}
+      - name: Get added files
+        id: added-files
+        uses: tj-actions/changed-files@v35.5.6
         with:
           files_ignore: .github/**
           dir_names: true
@@ -37,6 +46,8 @@ jobs:
           dir_names_exclude_root: true
           json: true
           json_raw_format: true
+      - run: echo ${{ steps.added-files.outputs.deleted_files }}
+      - run: echo ${{ steps.added-files.outputs.other_deleted_files }}
 
 
   added:
