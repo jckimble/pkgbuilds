@@ -34,10 +34,10 @@ To build AUR packages of your own selection, fork this repository.  The master b
 ## config.json default values (all values are optional)
 ```json
 {
-    "encGPG": "key.gpg.enc",
-    "pubGPG": "public.gpg",
+    "enc-gpg": "key.gpg.enc",
+    "pub-gpg": "public.gpg",
     "name": "GitHub Action",
     "email": "github-action@users.noreply.github.com",
-    "repoName": "aur"
+    "repo-name": "aur"
 }
 ```

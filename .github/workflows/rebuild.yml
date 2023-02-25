@@ -20,13 +20,9 @@ jobs:
   variables:
     runs-on: ubuntu-latest
     outputs:
-      encGPG: ${{ steps.config.outputs.encGPG }}
-      pubGPG: ${{ steps.config.outputs.pubGPG }}
-      name: ${{ steps.config.outputs.name }}
-      email: ${{ steps.config.outputs.email }}
-      repoName: ${{ steps.config.outputs.repoName}}
-
-      packager: ${{ steps.packager.outputs.packager }}
+      enc-gpg: ${{ steps.config.outputs.enc-gpg }}
+      repo-name: ${{ steps.config.outputs.repo-name}}
+      packager: ${{ steps.config.outputs.packager }}
 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -35,32 +31,7 @@ jobs:
         submodules: recursive
         ref: master
     - id: config
-      run: |
-        set_output () {
-          if [[ -z "${ACT}" ]]; then
-            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
-          else
-            echo "set-output name=${1}::${2}"
-            echo "::set-output name=${1}::${2}"
-          fi
-        }
-        getVal(){
-          if [ ! -f config.json ]; then
-            set_output ${1} ${2}
-            return
-          fi
-          val=`cat config.json | jq -r .${1}`
-          if [ "${val}" == "null" ]; then
-            set_output ${1} ${2}
-            return
-          fi
-          set_output ${1} $val
-        }
-        getVal encGPG key.gpg.enc
-        getVal pubGPG public.gpg
-        getVal name "GitHub Action"
-        getVal email github-action@users.noreply.github.com
-        getVal repoName aur
+      uses: ./.github/actions/load-config
     - id: set-matrix
       run: |
         set_output () {
@@ -72,17 +43,6 @@ jobs:
           fi
         }
         set_output matrix "`find . -iname 'PKGBUILD' -exec bash -c \"basename \\$(dirname \\"{}\\")\" \\; | jq -R -s -c 'split(\"\n\")[:-1]'`"
-    - id: packager
-      run: |
-        set_output () {
-          if [[ -z "${ACT}" ]]; then
-            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
-          else
-            echo "set-output name=${1}::${2}"
-            echo "::set-output name=${1}::${2}"
-          fi
-        }
-        set_output packager "${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
 
   remove-release:
     runs-on: ubuntu-latest
@@ -116,7 +76,7 @@ jobs:
       env:
         PACKAGER: ${{ needs.variables.outputs.packager }}
         SECRET: ${{ secrets.ENCRYPTION_KEY }}
-        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+        GPGKEY: ${{ needs.variables.outputs.enc-gpg }}
       with:
         dir: ${{ matrix.package }}
         run: makepkg -sr --sign -C -c --noconfirm --noprogressbar
@@ -152,14 +112,14 @@ jobs:
       env:
         PACKAGER: ${{ needs.variables.outputs.packager }}
         SECRET: ${{ secrets.ENCRYPTION_KEY }}
-        GPGKEY: ${{ needs.variables.outputs.encGPG }}
+        GPGKEY: ${{ needs.variables.outputs.enc-gpg }}
       with:
-        run: repo-add -s -q --nocolor -n -R ${{ needs.variables.outputs.repoName }}.db.tar.gz *.pkg.tar.zst
+        run: repo-add -s -q --nocolor -n -R ${{ needs.variables.outputs.repo-name }}.db.tar.gz *.pkg.tar.zst
     - name: Upload new repo
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         tag: repository
-        file: ${{ needs.variables.outputs.repoName }}.db*
+        file: ${{ needs.variables.outputs.repo-name }}.db*
         file_glob: true
         overwrite: true

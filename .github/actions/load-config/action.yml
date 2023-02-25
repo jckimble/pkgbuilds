@@ -1,0 +1,65 @@
+name: Load config.json
+description: Load base configuration
+outputs:
+  enc-gpg:
+    description: "Encrypted GPG Key"
+    value: ${{ steps.config.outputs.enc-gpg }}
+  pub-gpg: 
+    description: "Public GPG Key"
+    value: ${{ steps.config.outputs.pub-gpg }}
+  name: 
+    description: "Real Name"
+    value: ${{ steps.config.outputs.name }}
+  email: 
+    description: "Email"
+    value: ${{ steps.config.outputs.email }}
+  repo-name: 
+    description: "Repo Name"
+    value: ${{ steps.config.outputs.repo-name}}
+  packager: 
+    description: "Packager"
+    value: ${{ steps.config.outputs.packager }}
+
+runs:
+  using: composite
+  steps:
+    - id: config
+      shell: bash
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        getVal(){
+          if [ ! -f config.json ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          val=`cat config.json | jq -r .${1}`
+          if [ "${val}" == "null" ]; then
+            set_output ${1} ${2}
+            return
+          fi
+          set_output ${1} $val
+        }
+        getVal enc-gpg key.gpg.enc
+        getVal pub-gpg public.gpg
+        getVal name "GitHub Action"
+        getVal email github-action@users.noreply.github.com
+        getVal repo-name aur
+    - id: packager
+      shell: bash
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        set_output packager "${{ steps.config.outputs.name }} <${{ steps.config.outputs.email }}>"
