@@ -16,17 +16,17 @@ Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 ## TODO (Ideas)
 
   - Use issue forms to auto add aur packages?
-  - Add Setup action
   - Add Push action (remove & add package)
-  - Move repetive workflow config into actions
 
 ## Customizing
 
 To build AUR packages of your own selection, fork this repository.  The master branch contains most of the build actions.
 
   - Fork this GitHub repository.
+  - Add Secrets (Pick one)
+  - - Set REPO_TOKEN with a private token
+  - - Set ENCRYPTION_KEY for actions and dependabot
   - Change config.json
-  - Add secret key (repository & dependabot) "ENCRYPTION_KEY" for signing
   - Optional: create custom keyring package (Feel free to use mine as a reference)
   - Add git submodule
   - Each time dependabot finds a submodule update, the package will be built and uploaded, and the repository updated.

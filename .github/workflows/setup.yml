@@ -1,0 +1,106 @@
+name: Setup
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'config.json'
+
+permissions:
+  packages: write
+  contents: write
+
+concurrency:
+  group: "release"
+
+jobs:
+  variables:
+    runs-on: ubuntu-latest
+    outputs:
+      enc-gpg: ${{ steps.config.outputs.enc-gpg }}
+      pub-gpg: ${{ steps.config.outputs.pub-gpg }}
+      email: ${{ steps.config.outputs.email }}
+
+      gpg-key: ${{ steps.get-key.outputs.key }}
+      generate: ${{ steps.get-key.outputs.generate }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: master
+    - id: config
+      uses: ./.github/actions/load-config
+    - id: get-key
+      run: |
+        set_output () {
+          if [[ -z "${ACT}" ]]; then
+            echo "${1}=${2}" | tee -a "${GITHUB_OUTPUT}"
+          else
+            echo "set-output name=${1}::${2}"
+            echo "::set-output name=${1}::${2}"
+          fi
+        }
+        if [ -z "${{ secrets.ENCRYPTION_KEY }}" ]; then
+          set_output key $(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
+          set_output generate true
+        else
+          set_output key ${{ secrets.ENCRYPTION_KEY }}
+          if [ ! -f "${{ steps.config.outputs.enc-gpg }}" ]; then
+            set_output generate true
+          else
+            set_output generate false
+          fi
+        fi;
+
+  secrets:
+    if: ${{ secrets.REPO_TOKEN != "" }}
+    needs: variables
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [actions,dependabot]
+    steps:
+    - uses: actions/checkout@v3
+    - run: (gh secret list -a ${{ matrix.app }} | grep ENCRYPTION_KEY >/dev/null 2>&1) || gh secret set ENCRYPTION_KEY --app ${{ matrix.app }} --body ${{ needs.variables.outputs.gpg-key }}
+      name: Set ${{ matrix.app }} Secret ENCRYPTION_KEY
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+    - run: gh secret delete REPO_TOKEN
+      name: Remove REPO_TOKEN
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+    
+
+  generate-gpgkey:
+    runs-on: ubuntu-latest
+    needs: variables
+    if: ${{ needs.variables.outputs.generate == 'true' }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate GPG Key
+        run: |
+          gpg --full-generate-key --expert --batch <<-END
+          %no-protection
+          Key-Type: eddsa
+          Key-Curve: Ed25519
+          Key-Usage: sign
+          Name-Real: ${{ needs.variables.outputs.name }}
+          Name-Email: ${{ needs.variables.outputs.email }}
+          Expire-Date: 3m
+          %commit
+          END
+      - name: Export Keys
+        run: |
+          rm -f ${{ needs.variables.outputs.enc-gpg }} ${{ needs.variables.outputs.pub-gpg }}
+          KEYID = $(gpg --list-secret-keys --keyid-format=long ${{ needs.variables.outputs.email }} | grep 'sec' | awk 'match($0, /[0-9A-Z]{16}/) {print substr($0, RSTART, RLENGTH)}')
+          gpg --armor --export-secret-key $KEYID | openssl aes-256-cbc -a -salt -pbkdf2 -out ${{ needs.variables.outputs.enc-gpg }} -pass pass:${{ needs.variables.outputs.gpg-key }}
+          gpg --batch --output ${{ needs.variables.outputs.pub-gpg }} --armor --export $KEYID
+      - name: Push Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ${{ needs.variables.outputs.enc-gpg }} ${{ needs.variables.outputs.pub-gpg }}
+          git commit -m "chore: Generate GPG Key"
+          git push -u origin master
+

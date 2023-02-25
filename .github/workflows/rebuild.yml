@@ -5,7 +5,10 @@ on:
       - master
     paths:
       - '.github/workflows/rebuild.yml'
-      - 'config.json'
+  workflow_run:
+    workflows: ["Setup"]
+    types:
+      - completed
   release:
     types:
       - deleted
@@ -21,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       enc-gpg: ${{ steps.config.outputs.enc-gpg }}
-      repo-name: ${{ steps.config.outputs.repo-name}}
+      repo-name: ${{ steps.config.outputs.repo-name }}
       packager: ${{ steps.config.outputs.packager }}
 
       matrix: ${{ steps.set-matrix.outputs.matrix }}

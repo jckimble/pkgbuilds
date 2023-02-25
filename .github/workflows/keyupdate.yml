@@ -64,11 +64,7 @@ jobs:
           if [ -z "${{ secrets.ENCRYPTION_KEY }}" ]; then
             set_output run false
           else
-            if [ -f "${{ needs.variables.outputs.enc-gpg }}" ]; then
-              set_output run true
-            else
-              set_output run gen
-            fi
+            set_output run true
           fi
       - name: Import Keys
         if: ${{ steps.vars.outputs.run == 'true' }}
@@ -77,21 +73,8 @@ jobs:
           if [ -f "${{ needs.variables.outputs.pub-gpg }}" ]; then
             cat ${{ needs.variables.outputs.pub-gpg }} | gpg --import
           fi
-      - name: Generate GPG Key
-        if: ${{ steps.vars.outputs.run == 'gen' }}
-        run: |
-          gpg --full-generate-key --expert --batch <<-END
-          %no-protection
-          Key-Type: eddsa
-          Key-Curve: Ed25519
-          Key-Usage: sign
-          Name-Real: ${{ needs.variables.outputs.name }}
-          Name-Email: ${{ needs.variables.outputs.email }}
-          Expire-Date: 3m
-          %commit
-          END
       - id: check
-        if: ${{ steps.vars.outputs.run != 'false' }}
+        if: ${{ steps.vars.outputs.run == 'true' }}
         run: |
           set_output () {
             if [[ -z "${ACT}" ]]; then
@@ -112,7 +95,7 @@ jobs:
             set_output update false
           fi
       - name: Update Expiry
-        if: ${{ steps.vars.outputs.run != 'false' && steps.check.outputs.update == 'true' }}
+        if: ${{ steps.check.outputs.update == 'true' }}
         run: |
           gpg --batch --command-fd 0 --edit-key ${{ steps.check.outputs.keyId }} <<-END
           expire
@@ -120,13 +103,13 @@ jobs:
           save
           END
       - name: Export Keys
-        if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
+        if: ${{ steps.check.outputs.update == 'true' }}
         run: |
           rm ${{ needs.variables.outputs.enc-gpg }} ${{ needs.variables.outputs.pub-gpg }}
           gpg --armor --export-secret-key ${{ steps.check.outputs.keyId }} | openssl aes-256-cbc -a -salt -pbkdf2 -out ${{ needs.variables.outputs.enc-gpg }} -pass pass:${{ secrets.ENCRYPTION_KEY }}
           gpg --batch --output ${{ needs.variables.outputs.pub-gpg }} --armor --export ${{ steps.check.outputs.keyId }}
       - name: Push Changes
-        if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
+        if: ${{ steps.check.outputs.update == 'true' }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -134,7 +117,7 @@ jobs:
           git commit -m "Update GPG Key"
           git push -u origin master
       - name: Rebuild Repo
-        if: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
+        if: ${{ steps.check.outputs.update == 'true' }}
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
         with:
           delete_release: true # default: false
