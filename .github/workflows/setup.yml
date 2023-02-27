@@ -84,7 +84,7 @@ jobs:
     needs: variables
     if: ${{ needs.variables.outputs.generate == 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Generate GPG Key
         run: |
           gpg --full-generate-key --expert --batch <<-END

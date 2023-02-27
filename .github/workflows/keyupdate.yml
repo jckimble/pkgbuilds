@@ -50,7 +50,7 @@ jobs:
     outputs:
       rebuild: ${{ steps.vars.outputs.run == 'gen' || steps.check.outputs.update == 'true' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: vars
         run: |
           set_output () {
