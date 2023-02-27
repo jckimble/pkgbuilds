@@ -16,6 +16,3 @@
 [submodule "pacrepo-cli"]
 	path = pacrepo-cli
 	url = https://github.com/jckimble/pacrepo-cli.git
-[submodule "pcsxr"]
-	path = pcsxr
-	url = https://aur.archlinux.org/pcsxr.git
