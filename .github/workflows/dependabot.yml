@@ -18,6 +18,7 @@ jobs:
       packager: ${{ steps.config.outputs.packager }}
 
       package: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+      ecosystem: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
     steps:
     - run: echo "Not dependabot[bot]" && exit 1
       if: ${{ github.actor != 'dependabot[bot]' }}
@@ -33,6 +34,7 @@ jobs:
     
   build-package:
     runs-on: ubuntu-latest
+    if: ${{ needs.variables.outputs.ecosystem == "gitsubmodule" }}
     needs: 
       - variables
 
@@ -128,7 +130,9 @@ jobs:
   merge-dependabot-pr:
     name: Merge Dependabot PR
     runs-on: ubuntu-latest
+    if: always() && needs.variables.outputs.ecosystem != "gitsubmodule"
     needs:
+      - variables
       - build-repo
     steps:
       - uses: fastify/github-action-merge-dependabot@v3
