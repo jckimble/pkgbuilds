@@ -130,7 +130,7 @@ jobs:
   merge-dependabot-pr:
     name: Merge Dependabot PR
     runs-on: ubuntu-latest
-    if: always() && needs.variables.outputs.ecosystem != "gitsubmodule"
+    if: always() && ${{ needs.variables.outputs.ecosystem != "gitsubmodule" }}
     needs:
       - variables
       - build-repo
