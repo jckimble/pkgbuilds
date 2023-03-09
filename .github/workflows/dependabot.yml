@@ -34,10 +34,9 @@ jobs:
     
   build-package:
     runs-on: ubuntu-latest
-    if: ${{ needs.variables.outputs.ecosystem == "gitsubmodule" }}
     needs: 
       - variables
-
+    if: needs.variables.outputs.ecosystem == 'gitsubmodule'
     steps:
     - uses: actions/checkout@v3
       with:
@@ -130,7 +129,7 @@ jobs:
   merge-dependabot-pr:
     name: Merge Dependabot PR
     runs-on: ubuntu-latest
-    if: always() && ${{ needs.variables.outputs.ecosystem != "gitsubmodule" }}
+    if: always() && needs.variables.outputs.ecosystem != 'gitsubmodule'
     needs:
       - variables
       - build-repo
