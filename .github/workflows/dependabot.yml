@@ -20,8 +20,6 @@ jobs:
       package: ${{ steps.dependabot-metadata.outputs.dependency-names }}
       ecosystem: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
     steps:
-    - run: echo "Not dependabot[bot]" && exit 1
-      if: ${{ github.actor != 'dependabot[bot]' }}
     - uses: actions/checkout@v3
       with:
         submodules: recursive
