@@ -13,8 +13,12 @@ jobs:
   check_package:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - uses: stefanbuck/github-issue-praser@v3
         id: issue-parser
         with:
           template-path: .github/ISSUE_TEMPLATE/request-package.yml
-      - run: echo ${SOURCE} - ${PACKAGE}
+      - if: github.repository_owner == github.actor
+        run: echo ${JSON_STRING}
+        env:
+          JSON_STRING: ${{ steps.issue-parser.outputs.jsonString }}
