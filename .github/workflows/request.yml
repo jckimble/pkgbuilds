@@ -4,6 +4,7 @@ on:
     types:
       - opened
       - edited
+      - reopened
     label: package
 
 concurrency:
@@ -35,11 +36,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: git submodule add https://aur.archlinux.org/${PACKAGE}.git
-        if: needs.variables.outputs.source == "Archlinux AUR"
+        if: needs.variables.outputs.source == 'Archlinux AUR'
         env:
           PACKAGE: ${{ needs.variables.outputs.package }}
       - run: git submodule add https://github.com/${PACKAGE}.git
-        if: needs.variables.outputs.source == "Github Repo"
+        if: needs.variables.outputs.source == 'Github Repo'
         env:
           PACKAGE: ${{ needs.variables.outputs.package }}
       - run: |
@@ -47,7 +48,10 @@ jobs:
         id: basename
         env:
           PACKAGE: ${{ needs.variables.outputs.package }}
-      - run: "git commit -am \"feat: ${PACKAGE}\""
+      - run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -am "feat: ${PACKAGE}"
         if: github.repository_owner == github.actor
         env:
           PACKAGE: ${{ steps.basename.outputs.package }}
@@ -72,11 +76,20 @@ jobs:
       - if: github.repository_owner == github.actor
         run: |
           git clean -fd
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
           git push -u origin master
       - if: github.repository_owner == github.actor
         uses: peter-evans/close-issue@v2
+
+  invalid:
+    if: failure()
+    runs-on: "ubuntu-latest"
+    needs:
+      - variables
+      - build-check
+    steps:
+      - uses: peter-evans/close-issue@v2
+        with:
+         comment: Build-Check has failed. Either not a archlinux package (missing PKGBUILD) or missing dependency. Closing Issue 
 
 #  get-info:
 #    if: github.repository_owner != github.actor
