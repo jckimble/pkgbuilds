@@ -50,7 +50,7 @@ runs:
         getVal pub_gpg public.gpg
         getVal name "GitHub Action"
         getVal email github-action@users.noreply.github.com
-        getVal repo_name aur
+        getVal repo_name ${{ github.repository_owner }}
     - id: packager
       shell: bash
       run: |

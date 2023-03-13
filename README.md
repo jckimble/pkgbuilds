@@ -8,7 +8,7 @@ Use GitHub Actions for building and packaging a few [AUR](https://aur.archlinux.
 To use as custom repository in [Arch Linux](https://www.archlinux.org), add to file `/etc/pacman.conf`:
 
 ```
-[PKGBUILD]
+[jckimble]
 SigLevel = Optional TrustAll
 Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 ```
@@ -45,6 +45,6 @@ To build AUR packages of your own selection, fork this repository.  The master b
     "pub_gpg": "public.gpg",
     "name": "GitHub Action",
     "email": "github-action@users.noreply.github.com",
-    "repo_name": "aur"
+    "repo_name": "${{ github.repository_owner }}"
 }
 ```
