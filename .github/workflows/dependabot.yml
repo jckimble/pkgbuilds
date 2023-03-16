@@ -29,13 +29,12 @@ jobs:
     - name: Fetch Dependabot metadata
       id: dependabot-metadata
       uses: dependabot/fetch-metadata@v1
-    - run: echo ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
     
   build-package:
     runs-on: ubuntu-latest
     needs: 
       - variables
-    if: needs.variables.outputs.ecosystem != 'github-actions'
+    if: needs.variables.outputs.ecosystem == 'submodules'
     steps:
     - uses: actions/checkout@v3
       with:
@@ -128,7 +127,7 @@ jobs:
   merge-dependabot-pr:
     name: Merge Dependabot PR
     runs-on: ubuntu-latest
-    if: always() && needs.variables.outputs.ecosystem == 'github-actions'
+    if: always()
     needs:
       - variables
       - build-repo
