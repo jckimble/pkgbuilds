@@ -70,6 +70,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: Remove old package from directory
       uses: ./.github/actions/archlinux
+      continue-on-error: true
       env:
         PACKAGER: ${{ needs.variables.outputs.packager }}
       with:
