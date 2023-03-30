@@ -1,3 +1,5 @@
+name: Add/Remove Packages
+
 on:
   push:
     branches:

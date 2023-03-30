@@ -22,6 +22,7 @@ jobs:
       enc-gpg: ${{ steps.config.outputs.enc-gpg }}
       pub-gpg: ${{ steps.config.outputs.pub-gpg }}
       email: ${{ steps.config.outputs.email }}
+      name: ${{ steps.config.outputs.name }}
 
       gpg-key: ${{ steps.get-key.outputs.key }}
       has-token: ${{ steps.get-key.outputs.has_token }}

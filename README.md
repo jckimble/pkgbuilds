@@ -13,18 +13,6 @@ SigLevel = Optional TrustAll
 Server = https://github.com/jckimble/pkgbuilds/releases/download/repository
 ```
 
-## TODO (Ideas)
-
-  - Use issue forms to auto add aur packages? (In Progress)
-  - - aur.archlinux/rpc/v5/info
-  - - - resultcount <1> = reject
-  - - - Name, Description, License, LastModified, OutOfDate = review
-  - - - test build failed = reject
-  - - api.github/repos
-  - - - message = reject
-  - - - name, description, license, updated_at = review
-  - - - test build failed = reject
-
 ## Customizing
 
 To build AUR packages of your own selection, fork this repository.  The master branch contains most of the build actions.

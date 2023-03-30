@@ -1,3 +1,5 @@
+name: Update Package
+
 on:
   pull_request:
 
@@ -14,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       enc-gpg: ${{ steps.config.outputs.enc-gpg }}
-      repo-name: ${{ steps.config.outputs.repo-name}}
+      repo-name: ${{ steps.config.outputs.repo-name }}
       packager: ${{ steps.config.outputs.packager }}
 
       package: ${{ steps.dependabot-metadata.outputs.dependency-names }}
