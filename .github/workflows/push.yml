@@ -114,7 +114,7 @@ jobs:
       with:
         ref: master
     - name: Get current packages
-      uses: robinraju/release-downloader@v1.7
+      uses: robinraju/release-downloader@v1.8
       with:
         latest: true
         fileName: '*.pkg.*'
