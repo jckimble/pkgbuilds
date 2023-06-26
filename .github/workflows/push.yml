@@ -31,7 +31,7 @@ jobs:
         uses: ./.github/actions/load-config
       - name: Get deleted files
         id: deleted-files
-        uses: tj-actions/changed-files@v36
+        uses: tj-actions/changed-files@v37
         with:
           files_ignore: .github/**
           json: true
@@ -40,7 +40,7 @@ jobs:
       - run: echo ${{ steps.deleted-files.outputs.other_deleted_files }}
       - name: Get added files
         id: added-files
-        uses: tj-actions/changed-files@v36
+        uses: tj-actions/changed-files@v37
         with:
           files_ignore: .github/**
           dir_names: true
