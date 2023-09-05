@@ -28,7 +28,7 @@ jobs:
       has-token: ${{ steps.get-key.outputs.has_token }}
       generate: ${{ steps.get-key.outputs.generate }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: master
@@ -69,7 +69,7 @@ jobs:
       matrix:
         app: [actions,dependabot]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: (gh secret list -a ${{ matrix.app }} | grep ENCRYPTION_KEY >/dev/null 2>&1) || gh secret set ENCRYPTION_KEY --app ${{ matrix.app }} --body ${{ needs.variables.outputs.gpg-key }}
       name: Set ${{ matrix.app }} Secret ENCRYPTION_KEY
       env:
@@ -85,7 +85,7 @@ jobs:
     needs: variables
     if: ${{ needs.variables.outputs.generate == 'true' }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Generate GPG Key
         run: |
           gpg --full-generate-key --expert --batch <<-END
