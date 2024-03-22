@@ -30,7 +30,7 @@ jobs:
       uses: ./.github/actions/load-config
     - name: Fetch Dependabot metadata
       id: dependabot-metadata
-      uses: dependabot/fetch-metadata@v1
+      uses: dependabot/fetch-metadata@v2
     
   build-package:
     runs-on: ubuntu-latest
